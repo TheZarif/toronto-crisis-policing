@@ -13,6 +13,7 @@ _Last updated: 5 October 2026_
 | Test analysis data | `tests/test_analysis_data.py` | Done |
 | Exploratory analysis | `scripts/05-exploratory_data_analysis.py` → `outputs/eda/` | Done |
 | Model | `scripts/06-model_data.py` | To do |
+| Draft notes | `outputs/paper_draft.md` (data description, EDA, figure explainers) | Done |
 | Paper | `paper/paper.qmd` | To do (still starter template) |
 
 Run tests with `python -m pytest` (62 tests; shared checks in `tests/table_checks.py` run against both datasets).
@@ -58,4 +59,6 @@ From `outputs/eda/` (figures 01–06 plus CSV tables):
 ## Next steps
 
 1. Negative binomial model of counts with a population offset; decide how to handle the downtown core.
+   - Consider Section 17 (officer-initiated) apprehensions as the main or secondary outcome.
+   - Optional causal extension: difference-in-differences on Community Crisis Service pilot areas vs the rest, before and after March 2022 (needs pilot boundaries).
 2. Replace starter README, `.Rproj`, paper template and leftover R scripts.
