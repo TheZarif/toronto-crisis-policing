@@ -1,0 +1,30 @@
+# CLAUDE.md
+
+## Project
+Analysis of Toronto Police Mental Health Act (MHA) apprehensions by neighbourhood, examining whether crisis policing falls disproportionately on lower-income and racialized communities.
+
+## Data (Open Data Toronto, CKAN API)
+- `mental-health-apprehensions` — primary; ~137k rows, one per apprehension, 2014–present. No coordinates; spatial unit is `HOOD_158`. Youth (≤17) suppressed; ~1.5k rows lack a valid neighbourhood code.
+- `neighbourhoods` — 158-model boundaries (GeoJSON, EPSG:4326); join on `AREA_SHORT_CODE` ↔ `HOOD_158`.
+- `neighbourhood-profiles` — 2021 census covariates (population, income, visible minority share) for per-capita rates.
+- Optional: `persons-in-crisis-calls-for-service-attended`, `neighbourhood-improvement-areas`.
+
+Never edit `data/01-raw_data/`; regenerate it via the download script.
+
+## Stack
+- Python only. Conda (`environment.yml`) provides Python 3.12, uv and Quarto; uv manages all Python packages via `pyproject.toml` + `uv.lock`.
+- Setup: `conda env create -f environment.yml && conda activate toronto-mha && uv sync --active`.
+- Add deps with `uv add <pkg>` (dev: `uv add --dev`); never `pip install` or `conda install` Python packages. Run with `uv run --active python scripts/<file>.py`.
+- `polars` for data wrangling, `geopandas` for spatial work, `plotnine` (ggplot grammar) for all figures, `statsmodels` for models, `pytest` for data tests.
+- Report in Quarto (`paper/paper.qmd`, Python/Jupyter engine), rendered to PDF.
+
+## Layout
+- `scripts/` — numbered pipeline: simulate → test simulated → download → clean → test clean → EDA → model. Each script runs standalone from repo root.
+- `data/` — `00-simulated_data`, `01-raw_data`, `02-analysis_data` (parquet preferred).
+- `models/`, `paper/`, `other/` (literature, sketches, datasheet, LLM usage log).
+
+## Conventions
+- Write as a production analysis repo: clear names, no course/assignment references, no leftover starter-template content. Legacy R starter files are to be replaced by Python equivalents.
+- Report rates per 1,000 residents, not raw counts, when comparing neighbourhoods.
+- Figures: consistent plotnine theme, colour-blind-safe palettes, labelled axes and sources.
+- Seed all randomness; paths relative to repo root.

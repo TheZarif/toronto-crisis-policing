@@ -1,0 +1,7 @@
+name: toronto-mha
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - uv
+  - quarto

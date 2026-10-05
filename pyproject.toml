@@ -1,0 +1,26 @@
+[project]
+name = "toronto-mha"
+version = "0.1.0"
+description = "Neighbourhood-level analysis of Mental Health Act apprehensions in Toronto"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "polars",
+    "pandas",
+    "pyarrow",
+    "numpy",
+    "geopandas",
+    "pyogrio",
+    "plotnine",
+    "mizani",
+    "statsmodels",
+    "scipy",
+    "requests",
+    "jupyter",
+    "ipykernel",
+]
+
+[dependency-groups]
+dev = ["pytest", "ruff"]
+
+[tool.uv]
+package = false
