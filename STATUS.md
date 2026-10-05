@@ -12,11 +12,12 @@ _Last updated: 5 October 2026_
 | Clean | `scripts/03-clean_data.py` | Done |
 | Test analysis data | `tests/test_analysis_data.py` | Done |
 | Exploratory analysis | `scripts/05-exploratory_data_analysis.py` → `outputs/eda/` | Done |
+| Exploratory analysis (arrests) | `scripts/05b-exploratory_data_analysis_arrests.py` → `outputs/eda/arrests/` | Done |
 | Model | `scripts/06-model_data.py` | To do |
 | Draft notes | `outputs/paper_draft.md` (data description, EDA, figure explainers) | Done |
 | Paper | `paper/paper.qmd` | To do (still starter template) |
 
-Run tests with `python -m pytest` (62 tests; shared checks in `tests/table_checks.py` run against both datasets).
+Run tests with `python -m pytest` (88 tests; shared checks in `tests/table_checks.py` run against both datasets).
 
 Remaining starter leftovers to remove or replace: `scripts/06`–`07` (R), `models/first_model.rds`, `starter_folder.Rproj`, `README.md`, `paper/` template content.
 
@@ -28,6 +29,8 @@ Remaining starter leftovers to remove or replace: `scripts/06`–`07` (R), `mode
 - `neighbourhoods.parquet`: 158 neighbourhoods with 2021 census covariates, NIA designation, total apprehensions and mean annual rate per 1,000 residents.
 - `neighbourhood_year.parquet`: 158 × 12 panel of counts and rates, with zeros filled.
 - `neighbourhood_boundaries.geojson`: 158-model boundaries keyed by `hood_id`.
+- `arrests.parquet`: 65,276 race-based arrest and strip search records, 2020–2021 (one row per person arrested).
+- `population_by_race.parquet`: 2021 Toronto population in the seven police perceived-race categories (benchmark for disparity ratios).
 
 ## Exploratory findings
 
@@ -40,16 +43,28 @@ From `outputs/eda/` (figures 01–06 plus CSV tables):
 - **Neighbourhood correlates (Spearman ρ with mean annual rate):** Indigenous share 0.53, renter share 0.53, median income −0.41, low-income share 0.38, Black share 0.27, visible-minority share −0.05.
 - **Improvement Areas:** median rate 3.9 vs 3.4 elsewhere, only a modest difference.
 
+### Arrests and strip searches (supplementary)
+
+- People arrested per 1,000 residents of the same group, 2020–21: Black 38.6 (3.1× White), Indigenous 35.6 (2.8×), Middle-Eastern 21.1, Latino 13.9, White 12.5, South Asian 7.3, East/Southeast Asian 6.0.
+- Strip searches fell from 26–28% of arrests to 1–5% after the October 2020 search-of-persons procedure change; compare rates within a period.
+- Before the change, among booked arrests: Indigenous 59%, Black 53%, White 52% strip searched vs 33–35% for other groups. So the Black–White gap is at arrest, not search.
+- Arrests flagged "mental instability or possibly suicidal" (3.3%) were strip searched 72% vs 48% (booked, pre-change); Black flagged 80% vs White flagged 71%, while unflagged were equal at 51%.
+- Items were found in 34–38% of strip searches for every group (no outcome-test evidence of a lower search threshold for any group).
+
 ## Decisions
 
 - **Period:** 2014 to the last complete calendar year (currently 2025), by occurrence date. The cutoff is derived from the data. Excluded: 13 rows with pre-2014 occurrence dates and partial 2026.
 - **Missing codes:** `NSA` / `Not Recorded` become null. 1,438 in-period rows lack a neighbourhood; they stay in `apprehensions` for city-wide trends but are excluded from neighbourhood tables.
 - **Repeated event IDs:** `event_id` identifies an incident, not a person or row. 298 incidents have 2–3 rows (several people apprehended), including 115 rows identical on every field. All rows are kept because the source defines each row as a distinct apprehension and there is no person ID to deduplicate on (<0.1% of rows).
 - **Census measures:** 2021 census (25% sample). Population comes from the age-groups total. Percentages for visible minority, Black and Indigenous use the private-household population as denominator; renter % uses private households.
+- **Arrests source:** downloaded from the Toronto Police ArcGIS layer `RBDC_ARR_TBL_001`, because Open Data Toronto's copy is truncated at 32,000 of 65,276 rows. 2020/2021 label schemes harmonized (offence categories into 12 groups, age groups, youth). Strip searched implies booked, per source documentation.
+- **Race benchmark:** census groups combined to match police categories (East/Southeast Asian = Chinese + Filipino + Southeast Asian + Korean + Japanese; Middle-Eastern = Arab + West Asian; White = not a visible minority minus Indigenous identity). Covers 96% of residents.
 - **Raw data committed:** snapshot of the source data (28.7 MB CSV) kept in the repo for reproducibility, since the source is refreshed quarterly.
 - **Environment:** conda supplies Python, uv and Quarto; uv installs packages into the conda env via `UV_PROJECT_ENVIRONMENT`. See `CLAUDE.md`.
 
 ## Open issues
+
+- **Arrests data limits:** race is officer-perceived; 7.7% Unknown or Legacy; 45% of arrests lack a location; people arrested include non-residents but the benchmark is residents; only 2020–21 (pandemic years); flagged-mental-instability subgroups are small (Indigenous n=29 pre-change).
 
 - **Denominator problem:** apprehensions are recorded where they occur, not where the person lives. Downtown neighbourhoods with hospitals, shelters and many visitors have inflated per-resident rates (University: 17 per 1,000 vs a city median of about 3.5). Options: sensitivity analysis excluding the downtown core, controls for shelter or hospital presence, or framing results as "where crisis policing happens."
 - **No individual race data:** race can only be analysed at neighbourhood level (ecological), so the paper must avoid individual-level claims.

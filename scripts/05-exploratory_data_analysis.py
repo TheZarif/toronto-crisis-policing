@@ -24,7 +24,6 @@ from plotnine import (
     annotate,
     coord_flip,
     element_blank,
-    element_line,
     element_rect,
     element_text,
     facet_wrap,
@@ -46,9 +45,10 @@ from plotnine import (
     scale_y_continuous,
     scale_y_log10,
     theme,
-    theme_minimal,
     theme_void,
 )
+
+from figure_style import BLUE, INK, INK_MUTED, ORANGE, SEQUENTIAL_BLUES, THEME, save
 
 DATA_DIR = Path("data/02-analysis_data")
 OUT_DIR = Path("outputs/eda")
@@ -59,32 +59,6 @@ CRISIS_SERVICE_LAUNCH = date(2022, 3, 31)
 SOURCE_POLICE = "Source: Toronto Police Service via Open Data Toronto"
 SOURCE = SOURCE_POLICE + "; Statistics Canada 2021 Census"
 LOG_BREAKS = [1, 2, 3, 5, 10, 20]
-
-# Palette: validated categorical slots 1-2 and a one-hue blue sequential ramp.
-BLUE, ORANGE = "#2a78d6", "#eb6834"
-INK, INK_MUTED, GRID = "#0b0b0b", "#52514e", "#e4e3df"
-SEQUENTIAL_BLUES = ["#cde2fb", "#86b6ef", "#3987e5", "#1c5cab", "#0d366b"]
-
-THEME = theme_minimal(base_size=10) + theme(
-    figure_size=(7, 4.2),
-    text=element_text(color=INK),
-    plot_title=element_text(size=12, weight="bold", ha="left"),
-    plot_subtitle=element_text(size=9.5, color=INK_MUTED, ha="left"),
-    plot_caption=element_text(size=7.5, color=INK_MUTED, ha="left"),
-    axis_text=element_text(color=INK_MUTED),
-    panel_grid_major=element_line(color=GRID, size=0.4),
-    panel_grid_minor=element_blank(),
-    legend_position="top",
-    legend_title=element_blank(),
-    plot_background=element_rect(fill="white", color="white"),
-    plot_title_position="plot",
-    plot_caption_position="plot",
-)
-
-
-def save(plot, name: str, **size) -> None:
-    plot.save(OUT_DIR / f"{name}.png", dpi=200, verbose=False, **size)
-
 
 #### Read data ####
 apprehensions = pl.read_parquet(DATA_DIR / "apprehensions.parquet")
@@ -122,7 +96,7 @@ trend = (
     )
     + THEME
 )
-save(trend, "01_monthly_trend")
+save(trend, OUT_DIR, "01_monthly_trend")
 
 yearly = apprehensions.group_by("year").len("apprehensions").sort("year")
 yearly.write_csv(OUT_DIR / "yearly_counts.csv")
@@ -155,7 +129,7 @@ types = (
     + THEME
     + theme(panel_grid_major_y=element_blank(), figure_size=(7, 3.2))
 )
-save(types, "02_apprehension_types")
+save(types, OUT_DIR, "02_apprehension_types")
 
 type_by_year = (
     apprehensions.group_by("year")
@@ -187,7 +161,7 @@ demographics = (
     + THEME
     + theme(panel_grid_major_x=element_blank())
 )
-save(demographics, "03_age_sex")
+save(demographics, OUT_DIR, "03_age_sex")
 
 
 #### Where: neighbourhood rates ####
@@ -226,7 +200,7 @@ choropleth = (
         plot_caption_position="plot",
     )
 )
-save(choropleth, "04_rate_map")
+save(choropleth, OUT_DIR, "04_rate_map")
 
 rates.select(
     "hood_id", "neighbourhood", "tsns_designation", "population",
@@ -273,7 +247,7 @@ scatter = (
     + THEME
     + theme(figure_size=(9, 6), strip_text=element_text(weight="bold", ha="left"))
 )
-save(scatter, "05_rate_vs_covariates")
+save(scatter, OUT_DIR, "05_rate_vs_covariates")
 
 correlations = pl.DataFrame(
     {
@@ -298,7 +272,7 @@ nia_plot = (
         aes("tsns_designation", "mean_annual_rate_per_1000"),
     )
     + geom_boxplot(outlier_shape="", width=0.5, color=INK_MUTED, fill="white")
-    + geom_jitter(width=0.15, height=0, color=BLUE, alpha=0.6, size=1.4, stroke=0)
+    + geom_jitter(width=0.15, height=0, random_state=853, color=BLUE, alpha=0.6, size=1.4, stroke=0)
     + scale_y_log10(breaks=LOG_BREAKS)
     + labs(
         title="Improvement Areas have only modestly higher rates than other neighbourhoods",
@@ -308,7 +282,7 @@ nia_plot = (
     + THEME
     + theme(panel_grid_major_x=element_blank(), figure_size=(7, 4))
 )
-save(nia_plot, "06_rate_by_designation")
+save(nia_plot, OUT_DIR, "06_rate_by_designation")
 
 
 #### Console summary ####

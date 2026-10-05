@@ -2,7 +2,8 @@
 # Purpose: Simulates the analysis tables produced by 03-clean_data.py so that
 #   tests and analysis code can be written before touching real data.
 #   Apprehension rates are simulated to rise with renter share and fall with
-#   income, the relationship the analysis will test for.
+#   income, and strip searches to be more likely for Black and Indigenous people
+#   arrested: the relationships the analysis will test for.
 # Author: Zarif Masud
 # Date: 5 October 2026
 # Contact: zarif.masud@gmail.com
@@ -35,6 +36,28 @@ TYPE_PROBS = [0.80, 0.08, 0.07, 0.04, 0.01]
 AGE_GROUPS = ["18 to 24", "25 to 34", "35 to 44", "45 to 54", "55 to 64", "65+"]
 PREMISES = ["Apartment", "House", "Outside", "Other", "Commercial", "Transit", "Educational"]
 DIVISIONS = [f"D{d}" for d in (11, 12, 13, 14, 22, 23, 31, 32, 33, 41, 42, 43, 51, 52, 53, 54, 55)]
+
+# Arrests: population benchmark (shares sum below 1; the rest have no police category)
+RACE_POPULATION = {
+    "White": 1_200_000, "Black": 265_000, "East/Southeast Asian": 576_000, "South Asian": 385_000,
+    "Middle-Eastern": 111_000, "Latino": 92_000, "Indigenous": 23_000,
+}
+CITY_POPULATION = 2_761_000
+# Arrest shares and strip search probabilities by perceived race.
+ARREST_RACE_PROBS = {
+    "White": 0.42, "Black": 0.27, "East/Southeast Asian": 0.07, "South Asian": 0.055,
+    "Middle-Eastern": 0.05, "Latino": 0.027, "Indigenous": 0.03, "Unknown or Legacy": 0.078,
+}
+STRIP_PROB = {"Black": 0.15, "Indigenous": 0.16}  # all other groups: 0.11
+ARREST_AGE_GROUPS = ["17 and under", "18 to 24", "25 to 34", "35 to 44", "45 to 54", "55 to 64", "65 and over"]
+OFFENCES = [
+    "Warrants, compliance & administrative", "Assault & crimes against persons", "Robbery & theft",
+    "Other", "Vehicle related & impaired", "Mischief & fraud", "Drug related", "Harassment & threatening",
+    "Weapons & homicide", "Break & enter", "Sexual offences & crimes against children", "Mental health",
+]
+ACTIONS = ["concealed_items", "combative", "resisted", "mental_instability", "assaulted_officer", "cooperative"]
+ACTION_PROBS = [0.004, 0.044, 0.038, 0.033, 0.006, 0.45]
+SEARCH_REASONS = ["search_reason_injury", "search_reason_escape", "search_reason_weapons", "search_reason_evidence"]
 
 
 #### Simulate neighbourhoods ####
@@ -137,9 +160,53 @@ apprehensions = (
 )
 
 
+#### Simulate arrests and strip searches ####
+N_ARRESTS = 60_000
+race = rng.choice(list(ARREST_RACE_PROBS), N_ARRESTS, p=list(ARREST_RACE_PROBS.values()))
+strip_searched = rng.random(N_ARRESTS) < np.array([STRIP_PROB.get(r, 0.11) for r in race])
+
+
+def when_searched(probability: float) -> pl.Series:
+    """Boolean recorded only for strip searches; null otherwise."""
+    values = rng.random(N_ARRESTS) < probability
+    return pl.Series([bool(v) if s else None for v, s in zip(values, strip_searched)], dtype=pl.Boolean)
+
+
+age_group = rng.choice(ARREST_AGE_GROUPS, N_ARRESTS, p=[0.05, 0.15, 0.32, 0.25, 0.14, 0.07, 0.02])
+arrests = pl.DataFrame(
+    {
+        "year": rng.choice([2020, 2021], N_ARRESTS),
+        "quarter": rng.choice(["Q1", "Q2", "Q3", "Q4"], N_ARRESTS),
+        "event_id": rng.integers(1_000_000, 1_100_000, N_ARRESTS),
+        "arrest_id": rng.permutation(np.arange(6_000_000, 6_000_000 + N_ARRESTS)),
+        "person_id": rng.integers(300_000, 340_000, N_ARRESTS),
+        "perceived_race": race,
+        "sex": rng.choice(["Male", "Female"], N_ARRESTS, p=[0.81, 0.19]),
+        "age_group": age_group,
+        "police_division": rng.choice(DIVISIONS, N_ARRESTS),
+        "offence_category": rng.choice(OFFENCES, N_ARRESTS),
+        "strip_searched": strip_searched,
+        "booked": strip_searched | (rng.random(N_ARRESTS) < 0.45),
+        **{name: rng.random(N_ARRESTS) < p for name, p in zip(ACTIONS, ACTION_PROBS)},
+        **{name: when_searched(0.5) for name in SEARCH_REASONS},
+        "items_found": when_searched(0.37),
+        "youth": age_group == "17 and under",
+    },
+    schema_overrides={"year": pl.Int16},
+).sort("year", "quarter", "event_id", "person_id")
+
+population_by_race = pl.DataFrame(
+    {"perceived_race": list(RACE_POPULATION), "population": list(RACE_POPULATION.values())},
+    schema_overrides={"population": pl.Int32},
+).with_columns((pl.col("population") / CITY_POPULATION).alias("population_share"))
+
+
 #### Save data ####
 apprehensions.write_parquet(OUT_DIR / "apprehensions.parquet")
 neighbourhoods.write_parquet(OUT_DIR / "neighbourhoods.parquet")
 neighbourhood_year.write_parquet(OUT_DIR / "neighbourhood_year.parquet")
+arrests.write_parquet(OUT_DIR / "arrests.parquet")
+population_by_race.write_parquet(OUT_DIR / "population_by_race.parquet")
 
 print(f"Simulated {apprehensions.height:,} apprehensions across {N_NEIGHBOURHOODS} neighbourhoods")
+print(f"Simulated {arrests.height:,} arrest records")

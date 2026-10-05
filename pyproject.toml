@@ -30,4 +30,4 @@ package = false
 testpaths = ["tests"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["table_checks"]
+known-first-party = ["table_checks", "figure_style"]

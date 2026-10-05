@@ -6,9 +6,10 @@ import geopandas as gpd
 import polars as pl
 import pytest
 
-from table_checks import FIRST_YEAR, TableChecks
+from table_checks import FIRST_YEAR, ArrestChecks, TableChecks
 
 RAW_APPREHENSIONS = Path("data/01-raw_data/mental_health_apprehensions.csv")
+RAW_ARRESTS = Path("data/01-raw_data/arrests_strip_searches.csv")
 BOUNDARIES = Path("data/02-analysis_data/neighbourhood_boundaries.geojson")
 
 
@@ -57,3 +58,20 @@ class TestAnalysisData(TableChecks):
     def test_improvement_areas_count(self, neighbourhoods):
         # TSNS 2020 designates 33 Neighbourhood Improvement Areas on the 158 model.
         assert (neighbourhoods["tsns_designation"] == "Improvement Area").sum() == 33
+
+
+class TestAnalysisArrests(ArrestChecks):
+    data_dir = Path("data/02-analysis_data")
+
+    def test_all_raw_records_kept(self, arrests):
+        # Full TPS release (Open Data Toronto's copy stops at 32,000 rows).
+        raw = pl.read_csv(RAW_ARRESTS, columns=["ObjectId"])
+        assert arrests.height == raw.height == 65_276
+
+    def test_strip_search_share_plausible(self, arrests):
+        assert 0.08 < arrests["strip_searched"].mean() < 0.15
+
+    def test_population_matches_census_total(self, population_by_race):
+        # 2021 Census private-household population of Toronto is about 2.76 million.
+        total = population_by_race["population"].sum() / population_by_race["population_share"].sum()
+        assert 2_700_000 < total < 2_800_000

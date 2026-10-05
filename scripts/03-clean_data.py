@@ -4,6 +4,8 @@
 #   - neighbourhoods.parquet: one row per neighbourhood with census covariates
 #   - neighbourhood_year.parquet: apprehension counts and rates per neighbourhood-year
 #   - neighbourhood_boundaries.geojson: 158-model boundaries keyed by hood_id
+#   - arrests.parquet: one row per person arrested (or strip searched), 2020-2021
+#   - population_by_race.parquet: 2021 Toronto population in police race categories
 # Author: Zarif Masud
 # Date: 5 October 2026
 # Contact: zarif.masud@gmail.com
@@ -37,6 +39,72 @@ TSNS_DESIGNATIONS = {
     "Neighbourhood Improvement Area (formerly Downsview-Roding-CFB)": "Improvement Area",
     "Emerging Neighbourhood": "Emerging",
     "Not an NIA or Emerging Neighbourhood": "Neither",
+}
+
+# Police changed category labels between 2020 and 2021; map both to one scheme.
+OFFENCE_CATEGORIES = {
+    "Assault": "Assault & crimes against persons",
+    "Assault & Other crimes against persons": "Assault & crimes against persons",
+    "Break & Enter": "Break & enter",
+    "Break and Enter": "Break & enter",
+    "Crimes against Children": "Sexual offences & crimes against children",
+    "Sexual Related Crime": "Sexual offences & crimes against children",
+    "Sexual Related Crimes & Crimes Against Children": "Sexual offences & crimes against children",
+    "Drug Related": "Drug related",
+    "FTA/FTC, Compliance Check & Parollee": "Warrants, compliance & administrative",
+    "FTA/FTC/Compliance Check/Parollee": "Warrants, compliance & administrative",
+    "Warrant": "Warrants, compliance & administrative",
+    "Police Category - Administrative": "Warrants, compliance & administrative",
+    "Fraud": "Mischief & fraud",
+    "Mischief": "Mischief & fraud",
+    "Mischief & Fraud": "Mischief & fraud",
+    "Harassment & Threatening": "Harassment & threatening",
+    "Harassment/Threatening": "Harassment & threatening",
+    "Homicide": "Weapons & homicide",
+    "Weapons": "Weapons & homicide",
+    "Weapons & Homicide": "Weapons & homicide",
+    "Impaired": "Vehicle related & impaired",
+    "Vehicle Related": "Vehicle related & impaired",
+    "Vehicle Related (inc. Impaired)": "Vehicle related & impaired",
+    "Robbery & Theft": "Robbery & theft",
+    "Robbery/Theft": "Robbery & theft",
+    "Mental Health": "Mental health",
+    "LLA": "Other",
+    "Other Offence": "Other",
+    "Other Statute": "Other",
+    "Other Statute & Other Incident Type": "Other",
+    "Police Category - Incident": "Other",
+}
+
+ARREST_AGE_GROUPS = {
+    "Aged 17 years and under": "17 and under",
+    "Aged 17 years and younger": "17 and under",
+    "Aged 18 to 24 years": "18 to 24",
+    "Aged 25 to 34 years": "25 to 34",
+    "Aged 35 to 44 years": "35 to 44",
+    "Aged 45 to 54 years": "45 to 54",
+    "Aged 55 to 64 years": "55 to 64",
+    "Aged 65 and older": "65 and over",
+    "Aged 65 years and older": "65 and over",
+}
+
+QUARTERS = {"Jan-Mar": "Q1", "Apr-June": "Q2", "July-Sept": "Q3", "Oct-Dec": "Q4"}
+
+ARREST_ACTIONS = {
+    "Actions_at_arrest___Concealed_i": "concealed_items",
+    "Actions_at_arrest___Combative__": "combative",
+    "Actions_at_arrest___Resisted__d": "resisted",
+    "Actions_at_arrest___Mental_inst": "mental_instability",
+    "Actions_at_arrest___Assaulted_o": "assaulted_officer",
+    "Actions_at_arrest___Cooperative": "cooperative",
+}
+
+# Reasons for a strip search; recorded only when one took place.
+SEARCH_REASONS = {
+    "SearchReason_CauseInjury": "search_reason_injury",
+    "SearchReason_AssistEscape": "search_reason_escape",
+    "SearchReason_PossessWeapons": "search_reason_weapons",
+    "SearchReason_PossessEvidence": "search_reason_evidence",
 }
 
 
@@ -170,11 +238,87 @@ neighbourhoods = neighbourhoods.join(
 )
 
 
+#### Clean arrests and strip searches ####
+raw_arrests = pl.read_csv(RAW_DIR / "arrests_strip_searches.csv", infer_schema_length=None)
+
+arrests = (
+    raw_arrests.select(
+        pl.col("Arrest_Year").cast(pl.Int16).alias("year"),
+        pl.col("Arrest_Month").replace_strict(QUARTERS).alias("quarter"),
+        pl.col("EventID").alias("event_id"),
+        pl.col("ArrestID").alias("arrest_id"),
+        pl.col("PersonID").alias("person_id"),
+        pl.col("Perceived_Race").alias("perceived_race"),
+        pl.col("Sex").replace_strict({"M": "Male", "F": "Female", "U": None}).alias("sex"),
+        pl.col("Age_group__at_arrest_").replace_strict(ARREST_AGE_GROUPS, default=None).alias("age_group"),
+        pl.when(pl.col("ArrestLocDiv") == "XX")
+        .then(None)
+        .otherwise(pl.format("D{}", pl.col("ArrestLocDiv")))
+        .alias("police_division"),
+        pl.col("Occurrence_Category").replace_strict(OFFENCE_CATEGORIES, default=None).alias("offence_category"),
+        (pl.col("StripSearch") == 1).alias("strip_searched"),
+        # Source documentation: a strip search implies a booking even when not recorded.
+        ((pl.col("Booked") == 1) | (pl.col("StripSearch") == 1)).alias("booked"),
+        *[(pl.col(source) == 1).alias(name) for source, name in ARREST_ACTIONS.items()],
+        *[(pl.col(source) == 1).alias(name) for source, name in SEARCH_REASONS.items()],
+        (pl.col("ItemsFound") == 1).alias("items_found"),
+        pl.col("Youth_at_arrest__under_18_years").str.starts_with("Youth").alias("youth"),
+    )
+    .sort("year", "quarter", "event_id", "person_id")
+)
+
+
+#### Toronto population by police race category ####
+# City totals are summed from the 158 neighbourhood columns of the 2021 profile.
+# Census groups are combined to match the Toronto Police perceived-race categories.
+# Indigenous people are not counted as visible minorities by Statistics Canada,
+# so "White" is approximated as "not a visible minority" minus Indigenous identity.
+def city_total(label: str, anchor: str) -> float:
+    return sum(float(value) for value in profile_row(label, anchor) if value not in (None, ""))
+
+
+census_groups = {
+    group: city_total(group, VISIBLE_MINORITY)
+    for group in [
+        "South Asian", "Chinese", "Black", "Filipino", "Arab", "Latin American",
+        "Southeast Asian", "West Asian", "Korean", "Japanese", "Not a visible minority",
+    ]
+}
+indigenous_total = city_total("Indigenous identity", INDIGENOUS)
+population_total = city_total(VISIBLE_MINORITY, VISIBLE_MINORITY)
+
+population_by_race = (
+    pl.DataFrame(
+        {
+            "perceived_race": [
+                "White", "Black", "East/Southeast Asian", "South Asian",
+                "Middle-Eastern", "Latino", "Indigenous",
+            ],
+            "population": [
+                census_groups["Not a visible minority"] - indigenous_total,
+                census_groups["Black"],
+                census_groups["Chinese"] + census_groups["Filipino"] + census_groups["Southeast Asian"]
+                + census_groups["Korean"] + census_groups["Japanese"],
+                census_groups["South Asian"],
+                census_groups["Arab"] + census_groups["West Asian"],
+                census_groups["Latin American"],
+                indigenous_total,
+            ],
+        }
+    )
+    .with_columns((pl.col("population") / population_total).alias("population_share"))
+    .with_columns(pl.col("population").cast(pl.Int32))
+)
+
+
 #### Save data ####
 apprehensions.write_parquet(OUT_DIR / "apprehensions.parquet")
 neighbourhoods.write_parquet(OUT_DIR / "neighbourhoods.parquet")
 neighbourhood_year.write_parquet(OUT_DIR / "neighbourhood_year.parquet")
 boundaries.to_file(OUT_DIR / "neighbourhood_boundaries.geojson", driver="GeoJSON")
+arrests.write_parquet(OUT_DIR / "arrests.parquet")
+population_by_race.write_parquet(OUT_DIR / "population_by_race.parquet")
 
 print(f"Years {FIRST_YEAR}-{last_complete_year}: {apprehensions.height:,} apprehensions")
 print(f"{neighbourhoods.height} neighbourhoods; {neighbourhood_year.height:,} neighbourhood-years")
+print(f"{arrests.height:,} arrest records, {arrests['year'].min()}-{arrests['year'].max()}")

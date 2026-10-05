@@ -1,0 +1,15 @@
+perceived_race,period,booked,strip_search_rate
+Latino,After policy change (Oct 2020–Dec 2021),617,0.02106969205834684
+South Asian,After policy change (Oct 2020–Dec 2021),1087,0.02207911683532659
+Middle-Eastern,After policy change (Oct 2020–Dec 2021),1084,0.027675276752767528
+East/Southeast Asian,After policy change (Oct 2020–Dec 2021),1303,0.042977743668457406
+Indigenous,After policy change (Oct 2020–Dec 2021),645,0.05581395348837209
+White,After policy change (Oct 2020–Dec 2021),8605,0.05647879140034864
+Black,After policy change (Oct 2020–Dec 2021),5852,0.05673274094326726
+South Asian,Before policy change (Jan–Sep 2020),702,0.3319088319088319
+Latino,Before policy change (Jan–Sep 2020),357,0.3333333333333333
+Middle-Eastern,Before policy change (Jan–Sep 2020),565,0.3504424778761062
+East/Southeast Asian,Before policy change (Jan–Sep 2020),807,0.35315985130111527
+White,Before policy change (Jan–Sep 2020),5930,0.5193929173693086
+Black,Before policy change (Jan–Sep 2020),3983,0.5277429073562642
+Indigenous,Before policy change (Jan–Sep 2020),455,0.5934065934065934

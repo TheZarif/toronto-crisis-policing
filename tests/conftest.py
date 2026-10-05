@@ -26,3 +26,13 @@ def neighbourhoods(request) -> pl.DataFrame:
 @pytest.fixture
 def neighbourhood_year(request) -> pl.DataFrame:
     return load(request.cls.data_dir, "neighbourhood_year")
+
+
+@pytest.fixture
+def arrests(request) -> pl.DataFrame:
+    return load(request.cls.data_dir, "arrests")
+
+
+@pytest.fixture
+def population_by_race(request) -> pl.DataFrame:
+    return load(request.cls.data_dir, "population_by_race")

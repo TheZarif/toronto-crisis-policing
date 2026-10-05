@@ -58,6 +58,39 @@ NEIGHBOURHOOD_YEAR_SCHEMA = {
     "rate_per_1000": pl.Float64,
 }
 
+PERCEIVED_RACES = {
+    "White", "Black", "East/Southeast Asian", "South Asian", "Middle-Eastern", "Latino", "Indigenous",
+}
+ARREST_AGE_GROUPS = {"17 and under", "18 to 24", "25 to 34", "35 to 44", "45 to 54", "55 to 64", "65 and over"}
+OFFENCE_CATEGORIES = {
+    "Warrants, compliance & administrative", "Assault & crimes against persons", "Robbery & theft",
+    "Other", "Vehicle related & impaired", "Mischief & fraud", "Drug related", "Harassment & threatening",
+    "Weapons & homicide", "Break & enter", "Sexual offences & crimes against children", "Mental health",
+}
+ARREST_FLAGS = ["concealed_items", "combative", "resisted", "mental_instability", "assaulted_officer", "cooperative"]
+SEARCH_FIELDS = [
+    "search_reason_injury", "search_reason_escape", "search_reason_weapons", "search_reason_evidence", "items_found",
+]
+
+ARRESTS_SCHEMA = {
+    "year": pl.Int16,
+    "quarter": pl.String,
+    "event_id": pl.Int64,
+    "arrest_id": pl.Int64,
+    "person_id": pl.Int64,
+    "perceived_race": pl.String,
+    "sex": pl.String,
+    "age_group": pl.String,
+    "police_division": pl.String,
+    "offence_category": pl.String,
+    "strip_searched": pl.Boolean,
+    "booked": pl.Boolean,
+    **{flag: pl.Boolean for flag in ARREST_FLAGS},
+    **{field: pl.Boolean for field in SEARCH_FIELDS},
+    "youth": pl.Boolean,
+}
+POPULATION_BY_RACE_SCHEMA = {"perceived_race": pl.String, "population": pl.Int32, "population_share": pl.Float64}
+
 
 def values_outside(series: pl.Series, allowed: set) -> set:
     return set(series.drop_nulls().unique()) - allowed
@@ -174,3 +207,55 @@ class TableChecks:
         merged = neighbourhoods.join(totals, on="hood_id")
         assert (merged["total_apprehensions"] == merged["total"]).all()
         assert ((merged["mean_annual_rate_per_1000"] - merged["mean_rate"]).abs() < 1e-9).all()
+
+
+class ArrestChecks:
+    """Checks for the race-based arrests and strip search tables."""
+
+    data_dir: Path
+
+    def test_arrests_schema(self, arrests):
+        assert dict(arrests.schema) == ARRESTS_SCHEMA
+
+    def test_population_by_race_schema(self, population_by_race):
+        assert dict(population_by_race.schema) == POPULATION_BY_RACE_SCHEMA
+
+    def test_years_2020_2021(self, arrests):
+        assert set(arrests["year"]) == {2020, 2021}
+
+    def test_required_fields_present(self, arrests):
+        required = ["year", "quarter", "event_id", "person_id", "strip_searched", "booked", *ARREST_FLAGS, "youth"]
+        assert arrests.select(pl.col(required).null_count()).sum_horizontal().item() == 0
+
+    def test_categorical_values_valid(self, arrests):
+        assert not values_outside(arrests["quarter"], {"Q1", "Q2", "Q3", "Q4"})
+        assert not values_outside(arrests["perceived_race"], PERCEIVED_RACES | {"Unknown or Legacy"})
+        assert not values_outside(arrests["sex"], SEXES)
+        assert not values_outside(arrests["age_group"], ARREST_AGE_GROUPS)
+        assert not values_outside(arrests["offence_category"], OFFENCE_CATEGORIES)
+
+    def test_police_division_format(self, arrests):
+        assert arrests["police_division"].drop_nulls().str.contains(r"^D\d{2}$").all()
+
+    def test_youth_matches_age_group(self, arrests):
+        known = arrests.drop_nulls("age_group")
+        assert (known["youth"] == (known["age_group"] == "17 and under")).all()
+
+    def test_strip_search_implies_booking(self, arrests):
+        assert arrests.filter(pl.col("strip_searched"))["booked"].all()
+
+    def test_search_fields_only_for_strip_searches(self, arrests):
+        searched = arrests.filter(pl.col("strip_searched"))
+        not_searched = arrests.filter(~pl.col("strip_searched"))
+        assert searched.select(pl.col(SEARCH_FIELDS).null_count()).sum_horizontal().item() == 0
+        assert not_searched.select(pl.col(SEARCH_FIELDS).is_not_null().any()).sum_horizontal().item() == 0
+
+    def test_population_covers_police_categories(self, population_by_race):
+        assert set(population_by_race["perceived_race"]) == PERCEIVED_RACES
+        assert (population_by_race["population"] > 0).all()
+
+    def test_population_shares_valid(self, population_by_race):
+        shares = population_by_race["population_share"]
+        assert shares.is_between(0, 1).all()
+        # The rest of the population falls in census groups with no police category.
+        assert 0.9 < shares.sum() <= 1

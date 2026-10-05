@@ -7,6 +7,7 @@ Analysis of Toronto Police Mental Health Act (MHA) apprehensions by neighbourhoo
 - `mental-health-apprehensions` — primary; ~137k rows, one per apprehension, 2014–present. No coordinates; spatial unit is `HOOD_158`. Youth (≤17) suppressed; ~1.5k rows lack a valid neighbourhood code.
 - `neighbourhoods` — 158-model boundaries (GeoJSON, EPSG:4326); join on `AREA_SHORT_CODE` ↔ `HOOD_158`.
 - `neighbourhood-profiles` — 2021 census covariates (population, income, visible minority share) for per-capita rates.
+- Toronto Police race-based arrests and strip searches (2020–21), supplementary individual-level race data. Pulled from the TPS ArcGIS layer `RBDC_ARR_TBL_001`, **not** Open Data Toronto (its copy is truncated at 32,000 of 65,276 rows).
 - Optional: `persons-in-crisis-calls-for-service-attended`, `neighbourhood-improvement-areas`.
 
 Never edit `data/01-raw_data/`; regenerate it via the download script.
@@ -23,7 +24,8 @@ Never edit `data/01-raw_data/`; regenerate it via the download script.
 - `scripts/` — numbered pipeline: simulate → download → clean → EDA → model (data tests live in `tests/`). Each script runs standalone from repo root.
 - `data/` — `00-simulated_data`, `01-raw_data`, `02-analysis_data` (parquet preferred).
 - `tests/` — pytest data tests; `table_checks.py` holds checks shared by simulated and analysis data. Run `python -m pytest`.
-- `outputs/eda/` — exploratory figures and summary tables written by `05`.
+- `outputs/eda/` — exploratory figures and tables (`05`; arrests in `outputs/eda/arrests/` from `05b`). Shared plot theme in `scripts/figure_style.py`.
+- `outputs/paper_draft.md` — plain-language notes on data and EDA that feed the paper.
 - `models/`, `paper/`, `other/` (literature, sketches, datasheet, LLM usage log).
 
 ## Status
