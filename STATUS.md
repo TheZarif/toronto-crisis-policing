@@ -21,7 +21,7 @@ _Last updated: 5 October 2026_
 
 Run tests with `python -m pytest` (88 tests; shared checks in `tests/table_checks.py` run against both datasets).
 
-Remaining starter leftovers to remove or replace: `scripts/06`–`07` (R), `models/first_model.rds`, `starter_folder.Rproj`, `README.md`, `paper/` template content.
+Remaining starter leftovers to remove or replace: `scripts/06`–`07` (R), `models/first_model.rds`, `starter_folder.Rproj`, `paper/` template content.
 
 ## Data outputs
 
