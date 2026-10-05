@@ -13,8 +13,9 @@ Never edit `data/01-raw_data/`; regenerate it via the download script.
 
 ## Stack
 - Python only. Conda (`environment.yml`) provides Python 3.12, uv and Quarto; uv manages all Python packages via `pyproject.toml` + `uv.lock`.
-- Setup: `conda env create -f environment.yml && conda activate toronto-crisis-policing && uv sync --active`.
-- Add deps with `uv add <pkg>` (dev: `uv add --dev`); never `pip install` or `conda install` Python packages. Run with `uv run --active python scripts/<file>.py`.
+- uv must target the conda env (`--active` ignores conda): `export UV_PROJECT_ENVIRONMENT="$CONDA_PREFIX"` after activating.
+- Setup: `conda env create -f environment.yml && conda activate toronto-crisis-policing && UV_PROJECT_ENVIRONMENT="$CONDA_PREFIX" uv sync --inexact`.
+- Add deps with `uv add --no-sync <pkg> && uv sync --inexact` (dev: `--dev`); never `pip install` or `conda install` Python packages. Run scripts with plain `python scripts/<file>.py` in the activated env.
 - `polars` for data wrangling, `geopandas` for spatial work, `plotnine` (ggplot grammar) for all figures, `statsmodels` for models, `pytest` for data tests.
 - Report in Quarto (`paper/paper.qmd`, Python/Jupyter engine), rendered to PDF.
 
@@ -22,6 +23,9 @@ Never edit `data/01-raw_data/`; regenerate it via the download script.
 - `scripts/` — numbered pipeline: simulate → test simulated → download → clean → test clean → EDA → model. Each script runs standalone from repo root.
 - `data/` — `00-simulated_data`, `01-raw_data`, `02-analysis_data` (parquet preferred).
 - `models/`, `paper/`, `other/` (literature, sketches, datasheet, LLM usage log).
+
+## Status
+Progress, decisions and open issues live in `STATUS.md`; update it whenever a pipeline step or decision changes.
 
 ## Conventions
 - Write as a production analysis repo: clear names, no course/assignment references, no leftover starter-template content. Legacy R starter files are to be replaced by Python equivalents.

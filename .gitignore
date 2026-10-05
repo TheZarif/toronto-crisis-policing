@@ -44,3 +44,15 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Quarto
+.quarto/
+*_files/
