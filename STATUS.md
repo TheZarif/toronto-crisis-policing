@@ -33,7 +33,7 @@ Remaining starter leftovers to remove or replace: `scripts/06`–`07` (R), `mode
 From `outputs/eda/` (figures 01–06 plus CSV tables):
 
 - **Trend:** annual apprehensions rose about 80% from 7,387 (2014) to a peak of 13,350 (2021), then levelled off around 12,000–12,800. There was a dip in 2022–23 after the Community Crisis Service launched, but it doesn't establish cause on its own.
-- **Authority:** 79% are Section 17 (officer's own judgement); this share edged up from about 77% to 82%.
+- **Authority:** 79% are Section 17 (officer's own judgement); this share edged up from 78% in 2014 to 82% in 2025.
 - **Who:** the 25–34 age group is the largest; men outnumber women in every age group.
 - **Where:** rates are highest in the downtown core (University, Kensington-Chinatown, Downtown Yonge East, Yonge-Bay, Moss Park), with pockets in the northwest (West Humber-Clairville, York University Heights) and east (West Hill).
 - **Neighbourhood correlates (Spearman ρ with mean annual rate):** Indigenous share 0.53, renter share 0.53, median income −0.41, low-income share 0.38, Black share 0.27, visible-minority share −0.05.
