@@ -23,6 +23,7 @@ Never edit `data/01-raw_data/`; regenerate it via the download script.
 - `scripts/` — numbered pipeline: simulate → download → clean → EDA → model (data tests live in `tests/`). Each script runs standalone from repo root.
 - `data/` — `00-simulated_data`, `01-raw_data`, `02-analysis_data` (parquet preferred).
 - `tests/` — pytest data tests; `table_checks.py` holds checks shared by simulated and analysis data. Run `python -m pytest`.
+- `outputs/eda/` — exploratory figures and summary tables written by `05`.
 - `models/`, `paper/`, `other/` (literature, sketches, datasheet, LLM usage log).
 
 ## Status

@@ -1,0 +1,159 @@
+hood_id,neighbourhood,tsns_designation,population,total_apprehensions,mean_annual_rate_per_1000
+79,University,Neither,6435,1317,17.055167055167058
+78,Kensington-Chinatown,Neither,18120,3099,14.252207505518763
+168,Downtown Yonge East,Neither,17700,2857,13.451035781544256
+170,Yonge-Bay Corridor,Neither,12645,2007,13.226571767497035
+73,Moss Park,Neither,21490,3395,13.165038002171551
+85,South Parkdale,Improvement Area,20495,3159,12.844596242986094
+162,West Queen West,Neither,13170,2019,12.775246772968869
+95,Annex,Neither,29300,2539,7.221274175199089
+81,Trinity-Bellwoods,Neither,15415,1307,7.065628716618011
+112,Beechborough-Greenbrook,Improvement Area,6260,528,7.028753993610223
+71,Cabbagetown-South St.James Town,Neither,11020,924,6.987295825771324
+27,York University Heights,Improvement Area,28255,2102,6.19949271515366
+167,Church-Wellesley,Neither,22320,1656,6.182795698924731
+72,Regent Park,Improvement Area,12750,937,6.124183006535948
+121,Oakridge,Improvement Area,13705,990,6.019700839109813
+84,Little Portugal,Neither,15485,1106,5.951996555806694
+113,Weston,Improvement Area,18675,1308,5.836680053547525
+136,West Hill,Improvement Area,28140,1947,5.765813788201847
+64,Woodbine Corridor,Neither,12205,838,5.721698757339887
+67,Playter Estates-Danforth,Neither,7680,515,5.588107638888889
+154,Oakdale-Beverley Heights,Improvement Area,21420,1424,5.539993775287893
+74,North St.James Town,Neither,18535,1217,5.471630249078321
+172,Dovercourt Village,Neither,12380,810,5.4523424878836835
+90,Junction Area,Neither,14010,903,5.371163454675231
+124,Kennedy Park,Improvement Area,17110,1095,5.333138515488018
+18,New Toronto,Neither,11345,722,5.30336418392831
+69,Blake-Jones,Neither,7475,460,5.128205128205128
+98,Rosedale-Moore Park,Neither,20080,1234,5.121181938911023
+24,Black Creek,Improvement Area,21145,1278,5.036651690707022
+1,West Humber-Clairville,Neither,33300,2002,5.010010010010009
+62,East End-Danforth,Neither,21840,1307,4.987026862026862
+66,Danforth,Neither,9305,547,4.898799928353932
+87,High Park-Swansea,Neither,22665,1326,4.875358482241341
+70,South Riverdale,Neither,27815,1620,4.853496314937982
+86,Roncesvalles,Neither,14610,809,4.614419347478896
+135,Morningside,Improvement Area,17660,965,4.553605134012835
+68,North Riverdale,Neither,11290,605,4.465603779155594
+94,Wychwood,Neither,12800,678,4.4140625
+61,Taylor-Massey,Improvement Area,15025,792,4.392678868552413
+57,Broadview North,Neither,10955,577,4.389167807698159
+159,Etobicoke City Centre,Neither,23600,1232,4.350282485875706
+115,Mount Dennis,Improvement Area,13055,678,4.327843738031406
+163,Fort York-Liberty Village,Neither,19915,1016,4.25140179094485
+91,Weston-Pelham Park,Improvement Area,10680,543,4.23689138576779
+171,Junction-Wallace Emerson,Neither,23180,1177,4.23137762438884
+164,Wellington Place,Neither,25570,1298,4.230217703037414
+41,Bridle Path-Sunnybrook-York Mills,Neither,8940,451,4.203952274422073
+19,Long Branch,Neither,11360,572,4.196009389671361
+36,Newtonbrook West,Neither,23805,1157,4.05026955121473
+30,Brookhaven-Amesbury,Neither,17495,850,4.048775840716395
+65,Greenwood-Coxwell,Neither,14120,683,4.030925401322002
+111,Rockcliffe-Smythe,Improvement Area,22235,1067,3.9989506034030433
+54,O'Connor-Parkview,Neither,18405,883,3.9980077877388394
+83,Dufferin Grove,Neither,11215,537,3.9901917075345517
+2,Mount Olive-Silverstone-Jamestown,Improvement Area,31345,1490,3.961291008666986
+125,Ionview,Improvement Area,13365,633,3.9468761690983905
+92,Corso Italia-Davenport,Neither,13200,617,3.8952020202020208
+59,Danforth East York,Neither,17065,790,3.8577986131458157
+173,North Toronto,Neither,15885,729,3.824362606232295
+96,Casa Loma,Neither,11350,520,3.8179148311306896
+88,High Park North,Neither,21855,999,3.8091969800960874
+139,Scarborough Village,Improvement Area,16520,749,3.778248587570621
+166,St Lawrence-East Bayfront-The Islands,Neither,31285,1412,3.761120877950029
+31,Yorkdale-Glen Park,Emerging,16625,748,3.74937343358396
+169,Bay-Cloverhill,Neither,16670,748,3.739252149570086
+155,Downsview,Improvement Area,17970,794,3.6820626970877384
+120,Clairlea-Birchmount,Neither,26840,1182,3.669895678092399
+119,Wexford/Maryvale,Neither,28345,1246,3.66319750690892
+126,Dorset Park,Emerging,24305,1066,3.654940684358499
+4,Rexdale-Kipling,Neither,10375,454,3.6465863453815257
+165,Harbourfront-CityPlace,Neither,28135,1227,3.6342633730229252
+25,Glenfield-Jane Heights,Improvement Area,30020,1303,3.617033089051743
+106,Humewood-Cedarvale,Neither,13845,595,3.581316961598651
+6,Kingsview Village-The Westway,Improvement Area,22005,937,3.548435961523896
+37,Willowdale West,Neither,17160,730,3.545066045066045
+5,Elms-Old Rexdale,Improvement Area,9355,394,3.5097096027079995
+28,Rustic,Improvement Area,9390,395,3.5055023074192397
+100,Yonge-Eglinton,Neither,12410,521,3.4985226967499323
+160,Mimico-Queensway,Neither,17045,713,3.485870734330693
+80,Palmerston-Little Italy,Neither,13120,546,3.4679878048780495
+8,Humber Heights-Westmount,Emerging,10005,415,3.4566050308179244
+122,Birchcliffe-Cliffside,Neither,22700,933,3.42511013215859
+108,Briar Hill-Belgravia,Neither,14575,597,3.4133790737564325
+52,Bayview Village,Neither,22330,914,3.4109568592327206
+109,Caledonia-Fairbank,Neither,10015,409,3.4032284905974373
+40,St.Andrew-Windfields,Neither,16960,684,3.3608490566037736
+43,Victoria Village,Improvement Area,17365,690,3.311258278145695
+107,Oakwood Village,Neither,20710,821,3.30355705778207
+110,Keelesdale-Eglinton West,Improvement Area,11390,450,3.292361720807726
+142,Woburn North,Improvement Area,26580,1044,3.27313769751693
+21,Humber Summit,Improvement Area,12185,474,3.241690603200657
+138,Eglinton East,Improvement Area,22535,876,3.2394053694253384
+156,Bendale-Glen Andrew,Neither,18685,721,3.2155918294532158
+58,Old East York,Neither,9160,352,3.202328966521106
+3,Thistletown-Beaumond Heights,Improvement Area,9850,366,3.0964467005076144
+123,Cliffcrest,Neither,16130,597,3.0843149411035338
+13,Etobicoke West Mall,Neither,11865,437,3.0692512993397947
+146,Malvern East,Emerging,26095,949,3.030593344829789
+34,Bathurst Manor,Neither,15955,577,3.0136843204846966
+63,The Beaches,Neither,21510,775,3.0024794669146133
+150,Fenside-Parkwoods,Neither,20510,730,2.966032829514058
+50,Newtonbrook East,Neither,15345,545,2.959704572607798
+22,Humbermede,Improvement Area,16955,592,2.9096628329892855
+60,Woodbine-Lumsden,Neither,7915,275,2.8953463887134134
+32,Englemount-Lawrence,Emerging,21285,728,2.8502075013702926
+44,Flemingdon Park,Improvement Area,22530,752,2.7814765497854705
+174,South Eglinton-Davisville,Neither,22735,757,2.7747232607580092
+158,Islington,Neither,23460,771,2.7387041773231027
+134,Highland Creek,Neither,12625,413,2.726072607260726
+35,Westminster-Branson,Emerging,25705,835,2.7069960448680543
+47,Don Valley Village,Neither,26775,861,2.679738562091503
+48,Hillcrest Village,Neither,16345,513,2.6154787396757415
+141,Golfdale-Cedarbrae-Woburn,Improvement Area,27085,848,2.6090702110639348
+149,Parkwoods-O'Connor Hills,Neither,13965,435,2.5957751521661296
+23,Pelmo Park-Humberlea,Neither,11290,351,2.590788308237378
+33,Clanton Park,Neither,17620,544,2.5728339008702235
+89,Runnymede-Bloor West Village,Neither,10120,305,2.5115283267457182
+38,Lansing-Westgate,Neither,15910,477,2.498428661219359
+128,Agincourt South-Malvern West,Neither,24170,724,2.496207419666253
+157,Bendale South,Neither,10725,321,2.4941724941724943
+42,Banbury-Don Mills,Neither,27155,809,2.482661265574173
+102,Forest Hill North,Neither,12290,365,2.47491185245457
+97,Yonge-St.Clair,Neither,12905,380,2.45382926514271
+145,Malvern West,Emerging,17320,509,2.448999230177059
+114,Lambton Baby Point,Neither,7965,231,2.4168236032642807
+148,East L'Amoreaux,Emerging,21495,622,2.411413507017136
+49,Bayview Woods-Steeles,Neither,12085,349,2.406564611777686
+7,Willowridge-Martingrove-Richview,Neither,22445,632,2.34647657236207
+140,Guildwood,Neither,9680,272,2.341597796143251
+11,Eringate-Centennial-West Deane,Neither,18450,515,2.326106594399277
+118,Tam O'Shanter-Sullivan,Neither,27205,758,2.3218771059241563
+29,Maple Leaf,Neither,9845,274,2.319282207550364
+53,Henry Farm,Neither,19840,552,2.318548387096774
+161,Humber Bay Shores,Neither,22605,625,2.3040625230406255
+55,Thorncliffe Park,Improvement Area,20400,558,2.2794117647058822
+143,West Rouge,Neither,20670,556,2.2415739396871475
+151,Yonge-Doris,Neither,20160,542,2.2404100529100526
+15,Kingsway South,Neither,8855,227,2.1362695275738752
+101,Forest Hill South,Neither,10860,276,2.117863720073665
+147,L'Amoreaux West,Emerging,21545,545,2.107991026533612
+39,Bedford Park-Nortown,Neither,22145,559,2.1035598705501615
+12,Markland Wood,Neither,10365,260,2.0903682264029584
+16,Stonegate-Queensway,Neither,25650,641,2.0825211176088363
+152,East Willowdale,Neither,15485,384,2.0665159832095576
+144,Morningside Heights,Neither,24940,615,2.0549318364073774
+46,Pleasant View,Neither,15220,375,2.0532194480946124
+20,Alderwood,Neither,12595,304,2.011380177319042
+133,Centennial Scarborough,Neither,13380,320,1.9930244145490785
+99,Mount Pleasant East,Neither,16370,391,1.9904296477295869
+9,Edenbridge-Humber Valley,Neither,15190,359,1.969497476409919
+153,Avondale,Neither,13790,317,1.9156393521875756
+105,Lawrence Park North,Neither,14675,304,1.7262918796138556
+103,Lawrence Park South,Neither,14960,296,1.6488413547237075
+129,Agincourt North,Neither,27540,532,1.6097797143548773
+56,Leaside-Bennington,Neither,16535,294,1.481705473238585
+10,Princess-Rosethorn,Neither,11170,192,1.4324082363473591
+130,Milliken,Neither,23980,368,1.2788434806783429
+116,Steeles,Emerging,22765,318,1.1640676477048102
