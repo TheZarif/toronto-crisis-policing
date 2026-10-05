@@ -20,8 +20,9 @@ Never edit `data/01-raw_data/`; regenerate it via the download script.
 - Report in Quarto (`paper/paper.qmd`, Python/Jupyter engine), rendered to PDF.
 
 ## Layout
-- `scripts/` — numbered pipeline: simulate → test simulated → download → clean → test clean → EDA → model. Each script runs standalone from repo root.
+- `scripts/` — numbered pipeline: simulate → download → clean → EDA → model (data tests live in `tests/`). Each script runs standalone from repo root.
 - `data/` — `00-simulated_data`, `01-raw_data`, `02-analysis_data` (parquet preferred).
+- `tests/` — pytest data tests; `table_checks.py` holds checks shared by simulated and analysis data. Run `python -m pytest`.
 - `models/`, `paper/`, `other/` (literature, sketches, datasheet, LLM usage log).
 
 ## Status

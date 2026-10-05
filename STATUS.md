@@ -7,15 +7,17 @@ _Last updated: 5 October 2026_
 | Step | Script | State |
 |---|---|---|
 | Simulate | `scripts/00-simulate_data.py` | Done |
-| Test simulated data | `tests/test_simulated_data.py` (replaces `01-test_simulated_data.R`) | To do |
+| Test simulated data | `tests/test_simulated_data.py` | Done |
 | Download | `scripts/02-download_data.py` | Done |
 | Clean | `scripts/03-clean_data.py` | Done |
-| Test analysis data | `tests/test_analysis_data.py` (replaces `04-test_analysis_data.R`) | To do |
+| Test analysis data | `tests/test_analysis_data.py` | Done |
 | Exploratory analysis | `scripts/05-exploratory_data_analysis.py` | To do |
 | Model | `scripts/06-model_data.py` | To do |
 | Paper | `paper/paper.qmd` | To do (still starter template) |
 
-Remaining starter leftovers to remove or replace: `scripts/01`, `04`–`07` (R), `models/first_model.rds`, `starter_folder.Rproj`, `README.md`, `paper/` template content.
+Run tests with `python -m pytest` (62 tests; shared checks in `tests/table_checks.py` run against both datasets).
+
+Remaining starter leftovers to remove or replace: `scripts/05`–`07` (R), `models/first_model.rds`, `starter_folder.Rproj`, `README.md`, `paper/` template content.
 
 ## Data outputs
 
@@ -30,6 +32,7 @@ Remaining starter leftovers to remove or replace: `scripts/01`, `04`–`07` (R),
 
 - **Period:** 2014 to the last complete calendar year (currently 2025), by occurrence date. The cutoff is derived from the data. Excluded: 13 rows with pre-2014 occurrence dates and partial 2026.
 - **Missing codes:** `NSA` / `Not Recorded` become null. 1,438 in-period rows lack a neighbourhood; they stay in `apprehensions` for city-wide trends but are excluded from neighbourhood tables.
+- **Repeated event IDs:** `event_id` identifies an incident, not a person or row. 298 incidents have 2–3 rows (several people apprehended), including 115 rows identical on every field. All rows are kept because the source defines each row as a distinct apprehension and there is no person ID to deduplicate on (<0.1% of rows).
 - **Census measures:** 2021 census (25% sample). Population comes from the age-groups total. Percentages for visible minority, Black and Indigenous use the private-household population as denominator; renter % uses private households.
 - **Raw data committed:** snapshot of the source data (28.7 MB CSV) kept in the repo for reproducibility, since the source is refreshed quarterly.
 - **Environment:** conda supplies Python, uv and Quarto; uv installs packages into the conda env via `UV_PROJECT_ENVIRONMENT`. See `CLAUDE.md`.
@@ -43,7 +46,6 @@ Remaining starter leftovers to remove or replace: `scripts/01`, `04`–`07` (R),
 
 ## Next steps
 
-1. Write pytest suites for simulated and analysis data; remove R test scripts.
-2. Exploratory analysis: yearly trend (note 2022 launch of the Toronto Community Crisis Service), type breakdown, rate choropleth, rate vs income / visible-minority / renter share.
-3. Negative binomial model of counts with a population offset; decide how to handle the downtown core.
-4. Replace starter README, `.Rproj`, paper template and leftover R scripts.
+1. Exploratory analysis: yearly trend (note 2022 launch of the Toronto Community Crisis Service), type breakdown, rate choropleth, rate vs income / visible-minority / renter share.
+2. Negative binomial model of counts with a population offset; decide how to handle the downtown core.
+3. Replace starter README, `.Rproj`, paper template and leftover R scripts.
