@@ -26,7 +26,7 @@ Never edit `data/01-raw_data/`; regenerate it via the download script.
 - `tests/` — pytest data tests; `table_checks.py` holds checks shared by simulated and analysis data. Run `python -m pytest`.
 - `outputs/eda/<dataset>/` — one folder per dataset (`apprehensions` from `05a`, `arrests` from `05b`) holding figures, CSV tables and an `eda_<dataset>.md` write-up. Shared plot theme in `scripts/figure_style.py`.
 - `outputs/paper_draft.md` — project overview linking the per-dataset EDA write-ups.
-- `models/`, `paper/`, `other/` (literature, sketches, datasheet, LLM usage log).
+- `models/`, `paper/`, `other/` (sketches, datasheet, LLM usage log; `other/literature/` holds one literature review per dataset).
 
 ## Status
 Progress, decisions and open issues live in `STATUS.md`; update it whenever a pipeline step or decision changes.

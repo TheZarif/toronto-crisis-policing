@@ -15,6 +15,8 @@ _Last updated: 5 October 2026_
 | Exploratory analysis (arrests) | `scripts/05b-exploratory_data_analysis_arrests.py` → `outputs/eda/arrests/` | Done |
 | Model | `scripts/06-model_data.py` | To do |
 | Draft notes | `outputs/paper_draft.md` (overview) + `outputs/eda/*/eda_*.md` (per-dataset EDA write-ups) | Done |
+| Literature review | `other/literature/lit_review_apprehensions.md`, `lit_review_arrests.md` (10 verified sources each) | Done |
+| Research questions | `outputs/paper_draft.md` §6 (RQ1–RQ5; recommended: RQ1+RQ2 main, RQ5 supplementary) | Proposed, awaiting decision |
 | Paper | `paper/paper.qmd` | To do (still starter template) |
 
 Run tests with `python -m pytest` (88 tests; shared checks in `tests/table_checks.py` run against both datasets).
