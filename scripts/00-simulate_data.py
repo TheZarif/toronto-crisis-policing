@@ -114,7 +114,7 @@ neighbourhoods = neighbourhoods.join(
         pl.col("rate_per_1000").mean().alias("mean_annual_rate_per_1000"),
     ),
     on="hood_id",
-)
+).sort("hood_id")
 
 
 #### Simulate individual apprehensions ####
