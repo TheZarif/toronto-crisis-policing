@@ -11,10 +11,10 @@ _Last updated: 5 October 2026_
 | Download | `scripts/02-download_data.py` | Done |
 | Clean | `scripts/03-clean_data.py` | Done |
 | Test analysis data | `tests/test_analysis_data.py` | Done |
-| Exploratory analysis | `scripts/05-exploratory_data_analysis.py` → `outputs/eda/` | Done |
+| Exploratory analysis (apprehensions) | `scripts/05a-exploratory_data_analysis_apprehensions.py` → `outputs/eda/apprehensions/` | Done |
 | Exploratory analysis (arrests) | `scripts/05b-exploratory_data_analysis_arrests.py` → `outputs/eda/arrests/` | Done |
 | Model | `scripts/06-model_data.py` | To do |
-| Draft notes | `outputs/paper_draft.md` (data description, EDA, figure explainers) | Done |
+| Draft notes | `outputs/paper_draft.md` (overview) + `outputs/eda/*/eda_*.md` (per-dataset EDA write-ups) | Done |
 | Paper | `paper/paper.qmd` | To do (still starter template) |
 
 Run tests with `python -m pytest` (88 tests; shared checks in `tests/table_checks.py` run against both datasets).
@@ -34,7 +34,7 @@ Remaining starter leftovers to remove or replace: `scripts/06`–`07` (R), `mode
 
 ## Exploratory findings
 
-From `outputs/eda/` (figures 01–06 plus CSV tables):
+From `outputs/eda/apprehensions/` (write-up: `eda_apprehensions.md`):
 
 - **Trend:** annual apprehensions rose about 80% from 7,387 (2014) to a peak of 13,350 (2021), then levelled off around 12,000–12,800. There was a dip in 2022–23 after the Community Crisis Service launched, but it doesn't establish cause on its own.
 - **Authority:** 79% are Section 17 (officer's own judgement); this share edged up from 78% in 2014 to 82% in 2025.
@@ -44,6 +44,9 @@ From `outputs/eda/` (figures 01–06 plus CSV tables):
 - **Improvement Areas:** median rate 3.9 vs 3.4 elsewhere, only a modest difference.
 
 ### Arrests and strip searches (supplementary)
+
+From `outputs/eda/arrests/` (write-up: `eda_arrests.md`):
+
 
 - People arrested per 1,000 residents of the same group, 2020–21: Black 38.6 (3.1× White), Indigenous 35.6 (2.8×), Middle-Eastern 21.1, Latino 13.9, White 12.5, South Asian 7.3, East/Southeast Asian 6.0.
 - Strip searches fell from 26–28% of arrests to 1–5% after the October 2020 search-of-persons procedure change; compare rates within a period.

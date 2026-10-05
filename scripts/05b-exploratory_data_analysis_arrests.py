@@ -1,6 +1,7 @@
 #### Preamble ####
 # Purpose: Exploratory analysis of Toronto Police race-based arrest and strip
-#   search data (2020-2021): arrest rates by perceived race relative to
+#   search data (2020-2021): what people are arrested for and who they are,
+#   arrest rates by perceived race relative to
 #   population, the October 2020 strip search policy change, strip search rates
 #   by race, the role of "mental instability" flags, and search outcomes.
 # Author: Zarif Masud
@@ -16,7 +17,7 @@ from pathlib import Path
 
 import pandas as pd
 import polars as pl
-from mizani.formatters import percent_format
+from mizani.formatters import comma_format, percent_format
 from plotnine import (
     aes,
     annotate,
@@ -66,6 +67,68 @@ races = population["perceived_race"].to_list()
 known_race = arrests.filter(pl.col("perceived_race").is_in(races))
 
 
+#### Offence categories ####
+offences = (
+    arrests.drop_nulls("offence_category")
+    .group_by("offence_category")
+    .len("arrests")
+    .with_columns((pl.col("arrests") / pl.col("arrests").sum()).alias("share"))
+    .with_columns(
+        pl.when(pl.col("share") < 0.01)
+        .then(pl.lit("  <1%"))
+        .otherwise(pl.format("  {}%", (100 * pl.col("share")).round(0).cast(pl.Int32)))
+        .alias("label")
+    )
+    .sort("share")
+)
+
+offence_plot = (
+    ggplot(
+        ordered(offences.to_pandas(), "offence_category", offences["offence_category"].to_list()),
+        aes("offence_category", "share"),
+    )
+    + geom_col(fill=BLUE, width=0.6)
+    + geom_text(aes(label="label"), ha="left", size=8, color=INK)
+    + coord_flip()
+    + scale_y_continuous(labels=percent_format(), limits=(0, 0.3), expand=(0, 0))
+    + labs(
+        title="A quarter of arrests are for warrants, breaches and administrative reasons",
+        subtitle="Share of arrests by offence category, 2020–2021",
+        x="", y="Share of arrests",
+        caption=SOURCE + ".\n2020 and 2021 category labels harmonized into one scheme.",
+    )
+    + THEME
+    + theme(panel_grid_major_y=element_blank(), figure_size=(7.5, 4.4))
+)
+save(offence_plot, OUT_DIR, "01_offence_categories")
+offences.sort("share", descending=True).write_csv(OUT_DIR / "offence_categories.csv")
+
+
+#### Who is arrested: age and sex ####
+age_sex = (
+    arrests.drop_nulls(["sex", "age_group"])
+    .group_by("age_group", "sex")
+    .len("arrests")
+    .with_columns((pl.col("arrests") / 2).alias("per_year"))
+    .sort("age_group")
+)
+
+age_sex_plot = (
+    ggplot(age_sex, aes("age_group", "per_year", fill="sex"))
+    + geom_col(position=position_dodge(width=0.75), width=0.7)
+    + scale_fill_manual(values={"Male": BLUE, "Female": ORANGE})
+    + scale_y_continuous(labels=comma_format(), expand=(0, 0, 0.05, 0))
+    + labs(
+        title="Four in five arrests are of men, most aged 25–44",
+        subtitle="Average arrests per year by age group and sex, 2020–2021",
+        x="Age group", y="Arrests per year", caption=SOURCE,
+    )
+    + THEME
+    + theme(panel_grid_major_x=element_blank())
+)
+save(age_sex_plot, OUT_DIR, "02_age_sex")
+
+
 #### Arrest rates relative to population ####
 # People (not arrests) avoids counting repeat arrests of the same person.
 arrest_rates = (
@@ -111,7 +174,7 @@ rate_plot = (
     + THEME
     + theme(panel_grid_major_y=element_blank(), figure_size=(7.5, 3.8))
 )
-save(rate_plot, OUT_DIR, "01_arrest_rate_by_race")
+save(rate_plot, OUT_DIR, "03_arrest_rate_by_race")
 arrest_rates.write_csv(OUT_DIR / "arrest_rates_by_race.csv")
 
 
@@ -143,7 +206,7 @@ trend = (
     )
     + THEME
 )
-save(trend, OUT_DIR, "02_strip_search_trend")
+save(trend, OUT_DIR, "04_strip_search_trend")
 quarterly.write_csv(OUT_DIR / "strip_search_by_quarter.csv")
 
 
@@ -179,7 +242,7 @@ race_plot = (
     + THEME
     + theme(panel_grid_major_y=element_blank(), figure_size=(8, 4.8))
 )
-save(race_plot, OUT_DIR, "03_strip_search_by_race")
+save(race_plot, OUT_DIR, "05_strip_search_by_race")
 by_race.sort("period", "strip_search_rate").write_csv(OUT_DIR / "strip_search_by_race.csv")
 
 
@@ -239,7 +302,7 @@ mental_plot = (
     + THEME
     + theme(panel_grid_major_y=element_blank(), figure_size=(7.5, 4.2))
 )
-save(mental_plot, OUT_DIR, "04_mental_instability_strip_search")
+save(mental_plot, OUT_DIR, "06_mental_instability_strip_search")
 mental_rates.sort("group", "flag").write_csv(OUT_DIR / "mental_instability_strip_search.csv")
 
 
@@ -270,7 +333,7 @@ found_plot = (
     + THEME
     + theme(panel_grid_major_y=element_blank(), figure_size=(7, 3.6))
 )
-save(found_plot, OUT_DIR, "05_items_found")
+save(found_plot, OUT_DIR, "07_items_found")
 found.write_csv(OUT_DIR / "items_found_by_race.csv")
 
 

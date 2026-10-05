@@ -24,8 +24,8 @@ Never edit `data/01-raw_data/`; regenerate it via the download script.
 - `scripts/` — numbered pipeline: simulate → download → clean → EDA → model (data tests live in `tests/`). Each script runs standalone from repo root.
 - `data/` — `00-simulated_data`, `01-raw_data`, `02-analysis_data` (parquet preferred).
 - `tests/` — pytest data tests; `table_checks.py` holds checks shared by simulated and analysis data. Run `python -m pytest`.
-- `outputs/eda/` — exploratory figures and tables (`05`; arrests in `outputs/eda/arrests/` from `05b`). Shared plot theme in `scripts/figure_style.py`.
-- `outputs/paper_draft.md` — plain-language notes on data and EDA that feed the paper.
+- `outputs/eda/<dataset>/` — one folder per dataset (`apprehensions` from `05a`, `arrests` from `05b`) holding figures, CSV tables and an `eda_<dataset>.md` write-up. Shared plot theme in `scripts/figure_style.py`.
+- `outputs/paper_draft.md` — project overview linking the per-dataset EDA write-ups.
 - `models/`, `paper/`, `other/` (literature, sketches, datasheet, LLM usage log).
 
 ## Status

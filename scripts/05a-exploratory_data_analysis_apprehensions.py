@@ -7,7 +7,7 @@
 # Contact: zarif.masud@gmail.com
 # License: MIT
 # Pre-requisites: Run 03-clean_data.py first; run from repo root.
-#   Figures and tables are written to outputs/eda/.
+#   Figures and tables are written to outputs/eda/apprehensions/.
 
 
 #### Workspace setup ####
@@ -51,7 +51,7 @@ from plotnine import (
 from figure_style import BLUE, INK, INK_MUTED, ORANGE, SEQUENTIAL_BLUES, THEME, save
 
 DATA_DIR = Path("data/02-analysis_data")
-OUT_DIR = Path("outputs/eda")
+OUT_DIR = Path("outputs/eda/apprehensions")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Toronto Community Crisis Service (non-police crisis response) pilot launch.
