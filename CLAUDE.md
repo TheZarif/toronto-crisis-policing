@@ -13,7 +13,7 @@ Never edit `data/01-raw_data/`; regenerate it via the download script.
 
 ## Stack
 - Python only. Conda (`environment.yml`) provides Python 3.12, uv and Quarto; uv manages all Python packages via `pyproject.toml` + `uv.lock`.
-- Setup: `conda env create -f environment.yml && conda activate toronto-mha && uv sync --active`.
+- Setup: `conda env create -f environment.yml && conda activate toronto-crisis-policing && uv sync --active`.
 - Add deps with `uv add <pkg>` (dev: `uv add --dev`); never `pip install` or `conda install` Python packages. Run with `uv run --active python scripts/<file>.py`.
 - `polars` for data wrangling, `geopandas` for spatial work, `plotnine` (ggplot grammar) for all figures, `statsmodels` for models, `pytest` for data tests.
 - Report in Quarto (`paper/paper.qmd`, Python/Jupyter engine), rendered to PDF.

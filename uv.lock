@@ -1714,7 +1714,7 @@ wheels = [
 ]
 
 [[package]]
-name = "toronto-mha"
+name = "toronto-crisis-policing"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

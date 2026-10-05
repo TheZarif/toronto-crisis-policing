@@ -1,4 +1,4 @@
-name: toronto-mha
+name: toronto-crisis-policing
 channels:
   - conda-forge
 dependencies:
