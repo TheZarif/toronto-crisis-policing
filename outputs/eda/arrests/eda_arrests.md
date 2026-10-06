@@ -157,7 +157,7 @@ This is the link back to the main project. Officers can flag that a person showe
 
 ## 5. How this fits with the apprehensions analysis
 
-| | Apprehensions (main) | Arrests (supplementary) |
+| | Apprehensions | Arrests |
 |---|---|---|
 | Event | Mental Health Act apprehension | Criminal or administrative arrest |
 | Years | 2014–2025 | 2020–2021 |

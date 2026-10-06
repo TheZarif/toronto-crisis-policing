@@ -7,7 +7,7 @@ Analysis of Toronto Police Mental Health Act (MHA) apprehensions by neighbourhoo
 - `mental-health-apprehensions` — primary; ~137k rows, one per apprehension, 2014–present. No coordinates; spatial unit is `HOOD_158`. Youth (≤17) suppressed; ~1.5k rows lack a valid neighbourhood code.
 - `neighbourhoods` — 158-model boundaries (GeoJSON, EPSG:4326); join on `AREA_SHORT_CODE` ↔ `HOOD_158`.
 - `neighbourhood-profiles` — 2021 census covariates (population, income, visible minority share) for per-capita rates.
-- Toronto Police race-based arrests and strip searches (2020–21), supplementary individual-level race data. Pulled from the TPS ArcGIS layer `RBDC_ARR_TBL_001`, **not** Open Data Toronto (its copy is truncated at 32,000 of 65,276 rows).
+- Toronto Police race-based arrests and strip searches (2020–21), individual-level race data; may support or replace the apprehensions analysis (scope open). Pulled from the TPS ArcGIS layer `RBDC_ARR_TBL_001`, **not** Open Data Toronto (its copy is truncated at 32,000 of 65,276 rows).
 - Optional: `persons-in-crisis-calls-for-service-attended`, `neighbourhood-improvement-areas`.
 
 Never edit `data/01-raw_data/`; regenerate it via the download script.
