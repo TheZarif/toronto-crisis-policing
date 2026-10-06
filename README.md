@@ -32,6 +32,8 @@ Run everything from the repository root.
 
 ## Structure
 
+Built on Rohan Alexander's [starter folder](https://github.com/RohanAlexander/starter_folder) for *Telling Stories with Data*, adapted to Python.
+
 - `data/`: simulated (`00`), raw (`01`) and cleaned analysis (`02`) data.
 - `scripts/`: numbered pipeline (simulate, download, clean, explore, model).
 - `tests/`: pytest data tests, run against both the simulated and cleaned data.
@@ -43,4 +45,6 @@ Project status and decisions are tracked in [`STATUS.md`](STATUS.md).
 
 ## Statement on LLM usage
 
-Code, data cleaning, exploratory analysis and documentation were developed with the assistance of Claude (Anthropic) through Claude Code.
+Initial 'scaffolding' was done with LLMs. Code, data cleaning, exploratory analysis and documentation were developed on the starter repository with the assistance of Claude (Anthropic). An initial literature exploration was also done with the help of LLMs that will next be augmented with search in Google Scholar and other research bibliography websites like Research Gate or DPLB. 
+
+Use of LLMs require critical reflection throughout the process, including and not limited to examining bias and addressing questions of ownership and plagiarism. I remain committed to ethical use of LLM tools, and in my adoption of this technology in research and data analysis, I acknowledge the risks,  and I believe we can develop standards of rigour that can leverage the speed and potential of LLM tools while addressing the gaps.
