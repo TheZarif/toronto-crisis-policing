@@ -2,6 +2,8 @@
 
 Are police Mental Health Act apprehensions spread evenly across Toronto, or concentrated in poorer, renter-heavy and racialized neighbourhoods? This project combines 12 years of Toronto Police apprehension records (2014–2025) with 2021 Census neighbourhood profiles. It adds Toronto Police race-based arrest and strip search data (2020–2021) as individual-level evidence on race and on how people in crisis are treated at arrest.
 
+The final scope is still open. The paper may combine both datasets, or focus on the arrests and strip searches data instead of the apprehensions.
+
 ## Data
 
 | Dataset | Source | Records |
