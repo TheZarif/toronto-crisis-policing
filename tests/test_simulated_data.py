@@ -1,4 +1,4 @@
-"""Tests for the simulated tables written by scripts/00-simulate_data.py."""
+"""Tests for the simulated tables written by scripts/01-simulate_data.py."""
 
 from pathlib import Path
 

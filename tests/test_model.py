@@ -1,6 +1,6 @@
 """Checks that the count model specification recovers the effects built into the simulation.
 
-scripts/00-simulate_data.py sets the log apprehension rate to rise by 0.015 per
+scripts/01-simulate_data.py sets the log apprehension rate to rise by 0.015 per
 percentage point of renter households and fall by 0.6 per unit of log median
 income, with gamma-Poisson noise (shape 5, so overdispersion alpha = 0.2).
 """

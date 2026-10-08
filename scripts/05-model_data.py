@@ -2,11 +2,11 @@
 # Purpose: Fits the paper's models and saves tidy results.
 #   1. Negative binomial regressions of neighbourhood-year apprehension counts
 #      on 2021 Census characteristics, with log population as an offset and
-#      year effects (RQ1): all neighbourhoods, excluding the downtown core,
-#      Section 17 only and other apprehension types (RQ2).
+#      year effects, fitted to all neighbourhoods, excluding the downtown
+#      core, Section 17 apprehensions only and other apprehension types.
 #   2. Logistic regression of strip searches on the "mental instability" flag
 #      by perceived race, among booked arrests before the October 2020
-#      procedure change (RQ5).
+#      procedure change.
 # Author: Zarif Masud
 # Date: 7 October 2026
 # Contact: zarif.masud@gmail.com

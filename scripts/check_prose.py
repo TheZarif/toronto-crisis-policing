@@ -15,7 +15,7 @@ from pathlib import Path
 
 PAPER = Path("paper/paper.qmd")
 
-# From the Telling Stories with Data paper rubric.
+# Words that tend to signal filler, hype or overstatement in academic prose.
 PROHIBITED = [
     r"advanced", r"all-encompassing", r"apt", r"backdrop", r"beg the question", r"bridges? (the|a) gap",
     r"comprehensive", r"critical", r"crucial", r"data-driven", r"delves?", r"drastic", r"drives forward",

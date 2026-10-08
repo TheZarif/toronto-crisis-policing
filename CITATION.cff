@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this code or analysis, please cite the paper as below."
+title: "Crisis Policing in Toronto's Neighbourhoods"
+authors:
+  - family-names: Masud
+    given-names: Zarif
+    email: zarif.masud@gmail.com
+repository-code: "https://github.com/TheZarif/toronto-crisis-policing"
+license: MIT
+date-released: 2026-10-08
+keywords:
+  - mental health
+  - policing
+  - Mental Health Act
+  - neighbourhoods
+  - race-based data
+  - Toronto
+preferred-citation:
+  type: article
+  title: "Crisis Policing in Toronto's Neighbourhoods: Mental Health Act Apprehensions Are More Frequent Where More Households Rent and More Indigenous People Live, 2014–2025"
+  authors:
+    - family-names: Masud
+      given-names: Zarif
+  year: 2026
+  url: "https://github.com/TheZarif/toronto-crisis-policing"

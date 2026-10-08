@@ -1,7 +1,10 @@
 [project]
 name = "toronto-crisis-policing"
-version = "0.1.0"
-description = "Neighbourhood-level analysis of Mental Health Act apprehensions in Toronto"
+version = "1.0.0"
+description = "Code and data for \"Crisis Policing in Toronto's Neighbourhoods\": Mental Health Act apprehensions and race-based arrest data"
+authors = [{ name = "Zarif Masud", email = "zarif.masud@gmail.com" }]
+license = "MIT"
+readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "polars",
