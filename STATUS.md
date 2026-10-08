@@ -17,11 +17,11 @@ _Last updated: 5 October 2026_
 | Draft notes | `outputs/paper_draft.md` (overview) + `outputs/eda/*/eda_*.md` (per-dataset EDA write-ups) | Done |
 | Literature review | `other/literature/lit_review_apprehensions.md`, `lit_review_arrests.md` (10 and 11 verified sources) | Done |
 | Research questions | `outputs/paper_draft.md` §6 (RQ1–RQ5; scope options A apprehensions-led, B arrests-led, C arrests only) | Proposed, awaiting decision |
-| Paper | `paper/paper.qmd` | To do (still starter template) |
+| Paper | `paper/paper.qmd` → `paper/paper.pdf` (22 pp.: ~14 main, 4 appendix, 4 references) | First full draft |
 
 Run tests with `python -m pytest` (97 tests; shared checks in `tests/table_checks.py` run against both datasets).
 
-Starter leftovers removed; `paper/paper.qmd` is still the template until phase 4.
+Starter leftovers removed.
 
 ## Data outputs
 
@@ -112,7 +112,7 @@ Base spec: [Telling Stories with Data, Paper One](https://tellingstorieswithdata
 6. **Discussion:** findings, the ecological fallacy, the residents-vs-visitors denominator problem, the Community Crisis Service (descriptive only), weaknesses, next steps.
 7. **Appendix:** cleaning details, model diagnostics, strip-search logistic model (RQ5), staged disparity table (RQ4).
 
-**Phases:** (1–3 done on 7 Oct 2026)
+**Phases:** (1–4 done by 8 Oct 2026; phase 6 partly: banned-word check passes, render clean)
 1. **Clean up:** delete leftover R scripts, `.Rproj`, `first_model.rds`, the template paper and starter sketches; replace `other/llm_usage/usage.txt`.
 2. **Model:** `scripts/06-model_data.py` saves fitted models and tidy results to `models/` and `outputs/model/`; tests on model inputs.
 3. **References:** `paper/references.bib` with the literature, datasets, Python, packages, Quarto and the textbook.

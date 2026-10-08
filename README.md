@@ -29,6 +29,8 @@ python -m pytest
 python scripts/05a-exploratory_data_analysis_apprehensions.py
 python scripts/05b-exploratory_data_analysis_arrests.py
 python scripts/06-model_data.py
+python scripts/check_prose.py
+quarto render paper/paper.qmd
 ```
 
 Run everything from the repository root. The project uses Python in place of R; Python and every package are cited in `paper/references.bib`.
@@ -43,7 +45,7 @@ Built on Rohan Alexander's [starter folder](https://github.com/RohanAlexander/st
 - `models/` and `outputs/model/`: fitted models and their tidy results.
 - `outputs/eda/`: figures, tables and a write-up for each dataset. [`outputs/paper_draft.md`](outputs/paper_draft.md) summarizes findings and the proposed research questions.
 - `other/literature/`: literature reviews for each dataset.
-- `paper/`: Quarto source for the paper.
+- `paper/`: Quarto source (`paper.qmd`), bibliography and rendered PDF. Rendering needs a LaTeX distribution (`quarto install tinytex`).
 
 Project status and decisions are tracked in [`STATUS.md`](STATUS.md).
 

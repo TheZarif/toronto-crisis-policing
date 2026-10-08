@@ -18,7 +18,7 @@ Never edit `data/01-raw_data/`; regenerate it via the download script.
 - Setup: `conda env create -f environment.yml && conda activate toronto-crisis-policing && UV_PROJECT_ENVIRONMENT="$CONDA_PREFIX" uv sync --inexact`.
 - Add deps with `uv add --no-sync <pkg> && uv sync --inexact` (dev: `--dev`); never `pip install` or `conda install` Python packages. Run scripts with plain `python scripts/<file>.py` in the activated env.
 - `polars` for data wrangling, `geopandas` for spatial work, `plotnine` (ggplot grammar) for all figures, `statsmodels` for models, `great_tables` for paper tables, `pytest` for tests.
-- Report in Quarto (`paper/paper.qmd`, Python/Jupyter engine), rendered to PDF.
+- Report in Quarto (`paper/paper.qmd`, Python/Jupyter engine), rendered to PDF via TinyTeX. Tables: Great Tables printed as raw LaTeX through `latex_table()` (cell option `output: asis`). Don't put a bracketed citation right after an `@fig`/`@tbl` ref (pandoc swallows it). Run `python scripts/check_prose.py` before committing paper text.
 
 ## Layout
 - `scripts/` — numbered pipeline: simulate → download → clean → EDA (05a/05b) → model (06); tests live in `tests/`. Each script runs standalone from repo root.

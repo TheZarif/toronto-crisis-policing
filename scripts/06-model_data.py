@@ -19,8 +19,12 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import patsy
 import polars as pl
 import statsmodels.formula.api as smf
+from scipy.special import expit
+
+rng = np.random.default_rng(853)
 
 DATA_DIR = Path("data/02-analysis_data")
 MODEL_DIR = Path("models")
@@ -156,22 +160,29 @@ strip = smf.logit(STRIP_FORMULA, data=arrests).fit(
     cov_type="cluster",
     cov_kwds={"groups": arrests["person_id"]},
 )
+design_info = strip.model.data.model_spec  # patsy DesignInfo in statsmodels 0.15
 strip.save(MODEL_DIR / "strip_search_logit.pickle", remove_data=True)
 tidy(strip, "Strip search", r"mental_instability|race_group").to_csv(
     OUT_DIR / "strip_search_odds_ratios.csv", index=False
 )
 
 # Average predicted probability of a strip search by flag and race group, holding
-# each arrest's other characteristics at their observed values.
+# each arrest's other characteristics at their observed values. Intervals come
+# from 2,000 draws of the coefficients from their estimated sampling distribution.
+coef_draws = rng.multivariate_normal(strip.params.to_numpy(), strip.cov_params().to_numpy(), size=2000)
 predicted = []
 for group in ["White", "Black", "Indigenous", "Other groups"]:
     for flag in [0, 1]:
         scenario = arrests.assign(race_group=group, mental_instability=flag)
+        design = np.asarray(patsy.build_design_matrices([design_info], scenario)[0])
+        draws = expit(design @ coef_draws.T).mean(axis=0)
         predicted.append(
             {
                 "race_group": group,
                 "mental_instability": bool(flag),
                 "predicted_probability": strip.predict(scenario).mean(),
+                "ci_low": np.quantile(draws, 0.025),
+                "ci_high": np.quantile(draws, 0.975),
                 "flagged_in_group": int(
                     ((arrests["race_group"] == group) & (arrests["mental_instability"] == 1)).sum()
                 ),

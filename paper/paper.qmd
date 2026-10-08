@@ -1,259 +1,691 @@
 ---
-title: "My title"
-subtitle: "My subtitle if needed"
-author: 
-  - First author
-  - Another author
-thanks: "Code and data are available at: [https://github.com/RohanAlexander/starter_folder](https://github.com/RohanAlexander/starter_folder)."
+title: "Crisis Policing in Toronto's Neighbourhoods"
+subtitle: "Mental Health Act apprehensions are more frequent where more residents rent and more Indigenous people live, 2014–2025"
+author:
+  - Zarif Masud
+thanks: "Code and data are available at: <https://github.com/TheZarif/toronto-crisis-policing>."
 date: today
 date-format: long
-abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
-format: pdf
-number-sections: true
+abstract: "Toronto police detained people under Ontario's Mental Health Act about 11,000 times a year between 2014 and 2025, four times in five on an officer's own judgement. Combining these 131,325 apprehensions with 2021 Census profiles of the city's 158 neighbourhoods, we find that apprehension rates are about 16 per cent higher for each standard-deviation increase in the share of households that rent and about 21 per cent higher for each standard-deviation increase in the share of Indigenous residents, and both patterns hold outside the downtown core. Separate race-based data on 65,276 arrests in 2020–2021 show that Black and Indigenous people were arrested at about three times the White rate, and that people police flagged as mentally unstable were strip searched far more often, with the largest gap for Black people. Crisis policing in Toronto is concentrated in particular places and falls most heavily on particular groups, which bears on where the city's new non-police crisis service is most needed."
+format:
+  pdf:
+    number-sections: true
+    colorlinks: true
+    fig-pos: "htbp"
+    include-in-header:
+      text: |
+        \usepackage{booktabs}
+        \usepackage[section,above]{placeins}
+        \renewcommand{\topfraction}{0.9}
+        \renewcommand{\bottomfraction}{0.8}
+        \renewcommand{\textfraction}{0.07}
+        \renewcommand{\floatpagefraction}{0.8}
+        \setcounter{topnumber}{3}
+        \setcounter{totalnumber}{4}
+jupyter: python3
 bibliography: references.bib
+execute:
+  echo: false
+  warning: false
+  message: false
 ---
 
-```{r}
-#| include: false
-#| warning: false
-#| message: false
+```{python}
+#| label: setup
+import re
+import sys
+from pathlib import Path
 
-library(tidyverse)
-library(palmerpenguins)
+sys.path.insert(0, "../scripts")
+
+import geopandas as gpd
+import numpy as np
+import pandas as pd
+import polars as pl
+import statsmodels.formula.api as smf
+from figure_style import BLUE, INK, INK_MUTED, ORANGE, SEQUENTIAL_BLUES, THEME
+from great_tables import GT
+from mizani.formatters import comma_format, percent_format
+from plotnine import (
+    aes,
+    coord_flip,
+    element_blank,
+    element_rect,
+    element_text,
+    facet_wrap,
+    geom_abline,
+    geom_col,
+    geom_errorbar,
+    geom_hline,
+    geom_line,
+    geom_map,
+    geom_point,
+    geom_pointrange,
+    geom_smooth,
+    geom_vline,
+    ggplot,
+    labs,
+    position_dodge,
+    scale_color_manual,
+    scale_fill_manual,
+    scale_x_date,
+    scale_x_log10,
+    scale_y_continuous,
+    scale_y_log10,
+    theme,
+    theme_void,
+)
+
+DATA = Path("../data/02-analysis_data")
+SIM = Path("../data/00-simulated_data")
+MODEL = Path("../outputs/model")
+PAPER_THEME = THEME + theme(plot_title=element_blank(), figure_size=(6.5, 3.2))
+
+apprehensions = pl.read_parquet(DATA / "apprehensions.parquet")
+neighbourhoods = pl.read_parquet(DATA / "neighbourhoods.parquet")
+panel = pl.read_parquet(DATA / "neighbourhood_year.parquet")
+arrests = pl.read_parquet(DATA / "arrests.parquet")
+population_by_race = pl.read_parquet(DATA / "population_by_race.parquet")
+boundaries = gpd.read_file(DATA / "neighbourhood_boundaries.geojson")
+
+rate_ratios = pd.read_csv(MODEL / "count_model_rate_ratios.csv")
+model_fit = pd.read_csv(MODEL / "count_model_fit.csv")
+strip_odds = pd.read_csv(MODEL / "strip_search_odds_ratios.csv")
+strip_predicted = pd.read_csv(MODEL / "strip_search_predicted.csv")
+fitted = pd.read_csv(MODEL / "count_model_fitted.csv")
+
+
+def comma(x):
+    return f"{x:,.0f}"
+
+
+def latex_table(gt):
+    """Print a Great Tables table as a bare LaTeX tabular for Quarto to caption."""
+    tex = gt.as_latex()
+    body = re.search(r"\\begin\{tabular\*\}.*?\\end\{tabular\*\}", tex, re.S).group(0)
+    print("\\small\n" + body)
+
+
+def pct(x, digits=0):
+    return f"{100 * x:.{digits}f} per cent"
+
+
+def rr(model, term, with_ci=True):
+    row = rate_ratios.query("model == @model and term == @term").iloc[0]
+    text = f"{row.estimate:.2f}"
+    return f"{text} (95% CI {row.ci_low:.2f}–{row.ci_high:.2f})" if with_ci else text
+
+
+def rr_pct(model, term):
+    return f"{100 * (rate_ratios.query('model == @model and term == @term').estimate.iloc[0] - 1):.0f} per cent"
+
+
+# Apprehensions
+n_apprehensions = comma(apprehensions.height)
+first_year, last_year = apprehensions["year"].min(), apprehensions["year"].max()
+n_years = last_year - first_year + 1
+per_year = comma(round(apprehensions.height / n_years, -2))
+yearly = dict(apprehensions.group_by("year").len().iter_rows())
+growth = pct(yearly[2021] / yearly[2014] - 1)
+s17_share = pct(apprehensions["apprehension_type"].str.starts_with("Section 17").mean())
+s17_2014 = pct(apprehensions.filter(pl.col("year") == 2014)["apprehension_type"].str.starts_with("Section 17").mean())
+s17_last = pct(apprehensions.filter(pl.col("year") == last_year)["apprehension_type"].str.starts_with("Section 17").mean())
+n_no_hood = comma(apprehensions["hood_id"].null_count())
+women_share = pct((apprehensions["sex"] == "Female").sum() / apprehensions["sex"].drop_nulls().len())
+
+# Neighbourhoods
+rates = neighbourhoods["mean_annual_rate_per_1000"]
+rate_median = f"{rates.median():.1f}"
+lowest = neighbourhoods.sort("mean_annual_rate_per_1000").row(0, named=True)
+highest = neighbourhoods.sort("mean_annual_rate_per_1000", descending=True).row(0, named=True)
+n_downtown = int(neighbourhoods["downtown"].sum())
+n_nia = int((neighbourhoods["tsns_designation"] == "Improvement Area").sum())
+overdispersion = f"{model_fit.query('model == \"All apprehensions\"').alpha.iloc[0]:.2f}"
+panel_mean = panel["apprehensions"].mean()
+panel_var = panel["apprehensions"].var()
+
+# Arrests
+n_arrests = comma(arrests.height)
+n_people = comma(arrests["person_id"].n_unique())
+known = arrests.filter(pl.col("perceived_race").is_in(population_by_race["perceived_race"].implode()))
+people_rates = (
+    known.group_by("perceived_race")
+    .agg(pl.col("person_id").n_unique().alias("people"))
+    .join(population_by_race, on="perceived_race")
+    .with_columns((1000 * pl.col("people") / pl.col("population")).alias("per_1000"))
+)
+white_rate = people_rates.filter(pl.col("perceived_race") == "White")["per_1000"].item()
+people_rates = people_rates.with_columns((pl.col("per_1000") / white_rate).alias("ratio")).sort("per_1000")
+ratio = dict(people_rates.select("perceived_race", "ratio").iter_rows())
+per_1000 = dict(people_rates.select("perceived_race", "per_1000").iter_rows())
+pre_change = (pl.col("year") == 2020) & pl.col("quarter").is_in(["Q1", "Q2", "Q3"])
+strip_pre = pct(arrests.filter(pre_change)["strip_searched"].mean())
+strip_post_late = pct(arrests.filter((pl.col("year") == 2021) & (pl.col("quarter") == "Q4"))["strip_searched"].mean())
+flag_share = pct(arrests["mental_instability"].mean(), 1)
+pred = strip_predicted.set_index(["race_group", "mental_instability"])
+flag_or = strip_odds.query("term == 'mental_instability'").iloc[0]
+black_flag_or = strip_odds.query("term.str.contains('mental_instability:') and term.str.contains('Black')").iloc[0]
+
+
+def pred_pct(group, flag):
+    return f"{100 * pred.loc[(group, flag), 'predicted_probability']:.0f} per cent"
 ```
-
 
 # Introduction
 
-Overview paragraph
+When someone in Toronto is in a mental health crisis, the people who arrive are usually police officers. Ontario's *Mental Health Act* lets an officer detain a person and take them to hospital for a psychiatric assessment, a power known as an apprehension [@mha1990]. Police contact is a routine part of living with a mental disorder: in Canada about one in three people with a mental or substance use disorder had contact with police in a year [@boyce2015], and internationally about one in ten people with a mental disorder had police involved in their pathway to care [@livingston2016]. In Toronto these encounters have sometimes been fatal, which led to an independent review of how police respond to people in crisis [@iacobucci2014] and, in 2022, to the Toronto Community Crisis Service, which sends mental health workers instead of police to some calls [@tccs2023].
 
-Estimand paragraph
+This paper asks where in Toronto crisis policing is concentrated, and who it falls on. We use `{python} n_apprehensions` Mental Health Act apprehensions recorded by the Toronto Police Service from `{python} first_year` to `{python} last_year` [@tps_mha], about `{python} per_year` a year, and link them to 2021 Census characteristics of the city's 158 neighbourhoods [@toronto_profiles; @toronto_neighbourhoods]. Our estimand is the association between a neighbourhood's characteristics and its apprehension rate per resident, holding the other characteristics and the year constant. Because the apprehension data does not record the race of the person detained, we add the Toronto Police Service's race-based data on `{python} n_arrests` arrests in 2020 and 2021 [@tps_rbdc_arrests], which records the race police perceived for each person arrested and whether they appeared to be in a mental health crisis.
 
-Results paragraph
+Apprehension rates are higher where more households rent and where more Indigenous people live. A one-standard-deviation increase in renter share is associated with a rate about `{python} rr_pct("All apprehensions", "renter_pct")` higher, and a one-standard-deviation increase in Indigenous share with a rate about `{python} rr_pct("All apprehensions", "indigenous_pct")` higher. Both associations hold when the downtown core, where many apprehensions involve people who do not live there, is excluded. Neighbourhood poverty matters only through the downtown core, and Black population share and the City's own designation of disadvantaged neighbourhoods add little once renting and Indigenous share are accounted for. At the individual level, Black and Indigenous people were arrested at about `{python} f"{ratio['Black']:.1f}"` and `{python} f"{ratio['Indigenous']:.1f}"` times the White rate relative to their share of the population. People flagged by officers as mentally unstable were far more likely to be strip searched, and the increase was largest for Black people.
 
-Why it matters paragraph
-
-Telegraphing paragraph: The remainder of this paper is structured as follows. @sec-data....
-
-
-
-
-
+These findings matter for two reasons. First, they connect Toronto to an international literature showing that coercive psychiatric care is concentrated in deprived and racialized areas [@weich2017] and among Black patients [@anderson2014], which has not previously been examined with Toronto's police data at the neighbourhood level. Second, they suggest where non-police crisis response would reach the most people. The remainder of the paper is structured as follows. @sec-data describes the data and how each measure was produced. @sec-model sets out the models, @sec-results presents the results, and @sec-discussion discusses what they mean, along with the paper's limitations. The appendices give further detail on cleaning, model checks and the arrest data.
 
 # Data {#sec-data}
 
-## Overview
+## Sources
 
-We use the statistical programming language R [@citeR].... Our data [@shelter].... Following @tellingstories, we consider...
+We use four datasets, all downloaded and processed in Python [@python] with polars [@polars], pandas [@pandas], NumPy [@numpy], GeoPandas [@geopandas] and Shapely [@shapely]. Figures are made with plotnine [@plotnine], tables with Great Tables [@great_tables], models are fitted with statsmodels [@statsmodels], data tests use pytest [@pytest], and the paper is written in Quarto [@quarto]. The workflow follows @tellingstories.
 
-Overview text
+1. **Mental Health Act Apprehensions** [@tps_mha], published by the Toronto Police Service on Open Data Toronto [@opendatatoronto]: one row per apprehension from 2014 onward, with the date, the legal authority used, the person's sex and age group, the type of place and the neighbourhood where it happened.
+2. **Neighbourhoods** [@toronto_neighbourhoods]: boundaries of the City's 158 social-planning neighbourhoods.
+3. **Neighbourhood Profiles** [@toronto_profiles]: 2021 Census counts for each neighbourhood, from which we take population, household tenure, low income, visible minority and Indigenous identity, and the City's 2020 neighbourhood designation [@tsns2020].
+4. **Race and Identity Based Data Collection: Arrests and Strip Searches** [@tps_rbdc_arrests]: one row per person arrested or strip searched in 2020 and 2021, with the race the officer perceived, demographics, the offence category, behaviour recorded at arrest, and whether the person was booked and strip searched. The copy on Open Data Toronto stops at 32,000 rows, so we download the full 65,276 rows from the Toronto Police Service's own source.
 
-## Measurement
-	
-Some paragraphs about how we go from a phenomena in the world to an entry in the dataset.
+## Measurement {#sec-measurement}
 
-## Outcome variables
+An apprehension enters the data through a chain of decisions. Someone, often a family member, bystander or the person themselves, calls 9-1-1 about a person who seems to be in crisis. Police attend. If the officer believes the person is acting in a disorderly way and is likely to seriously harm themselves or someone else, or cannot care for themselves, the officer can detain them under Section 17 of the *Mental Health Act* and take them to hospital [@mha1990]. Police also carry out apprehensions that someone else has authorized: a physician's application for assessment (Section 15), a justice of the peace's order (Section 16), the return of a person who has broken a community treatment order (Section 33.4), and the return of an involuntary patient who has left hospital (Section 28). Each apprehension is logged in the police records system with the neighbourhood where it happened, and the published data is extracted from that system.
 
-Add graphs, tables and text. Use sub-sub-headings for each outcome variable or update the subheading to be singular.
+Several features of this process shape what the data can and cannot tell us. The data records apprehensions, not people: someone detained five times appears five times, and there is no person identifier. It records where an apprehension *happened*, not where the person lives. Records of people aged 17 and under are removed before publication, so the data covers adults only. Neighbourhood is missing ("NSA") for `{python} n_no_hood` apprehensions, which we keep for citywide counts but exclude from neighbourhood analysis. The data also omits everything that did not end in an apprehension: crisis calls resolved on scene, calls diverted to the Community Crisis Service, and voluntary visits to hospital. An apprehension therefore measures a particular outcome of a police encounter, not mental health need.
 
+The neighbourhood characteristics come from the 2021 Census long-form questionnaire, a 25 per cent sample, aggregated by the City to its neighbourhoods. They describe residents at one point in time, which we treat as fixed over the twelve years of apprehension data.
 
+In the arrest data, race is the officer's *perception* of the person's race, recorded at the time of arrest, not the person's own identity. The behaviour flags, including "mental instability or possibly suicidal", are also officers' judgements. To compare groups, we built a population benchmark from the 2021 Census by combining census categories to match the police ones; for example, East and Southeast Asian combines Chinese, Filipino, Southeast Asian, Korean and Japanese, and White is approximated by residents who are neither a visible minority nor Indigenous.
 
-Some of our data is of penguins (@fig-bills), from @palmerpenguins.
+## Apprehensions over time and by authority
 
-```{r}
-#| label: fig-bills
-#| fig-cap: Bills of penguins
-#| echo: false
+@fig-trend shows every month of the series. Apprehensions rose by about `{python} growth` from `{python} comma(yearly[2014])` in 2014 to a peak of `{python} comma(yearly[2021])` in 2021, dipped after the Community Crisis Service began in March 2022, and have since returned to about `{python} comma(round(yearly[last_year], -2))` a year. Men account for most apprehensions, but women make up `{python} women_share` of them, and the most common age group is 25 to 34.
 
-ggplot(penguins, aes(x = island, fill = species)) +
-  geom_bar(alpha = 0.8) +
-  scale_fill_manual(values = c("darkorange","purple","cyan4"),
-                    guide = "none") +
-  theme_minimal() +
-  facet_wrap(~species, ncol = 1) +
-  coord_flip()
+```{python}
+#| label: fig-trend
+#| fig-cap: "Mental Health Act apprehensions in Toronto rose through 2021 and have been roughly flat since. Each point is one month's total; the dashed line marks the launch of the Toronto Community Crisis Service pilots in March 2022."
+monthly = (
+    apprehensions.group_by(pl.col("occurrence_date").dt.truncate("1mo").alias("month"))
+    .len("apprehensions")
+    .sort("month")
+)
+(
+    ggplot(monthly, aes("month", "apprehensions"))
+    + geom_line(color=BLUE, alpha=0.5)
+    + geom_point(color=BLUE, size=0.9)
+    + geom_vline(xintercept=pd.Timestamp("2022-03-31"), linetype="dashed", color=INK_MUTED)
+    + scale_x_date(date_breaks="2 years", date_labels="%Y")
+    + scale_y_continuous(labels=comma_format(), limits=(0, None))
+    + labs(x="", y="Apprehensions per month")
+    + PAPER_THEME
+).draw()
 ```
 
-Talk more about it.
+@tbl-types shows that `{python} s17_share` of apprehensions rest on an officer's own judgement under Section 17, a share that rose from `{python} s17_2014` in 2014 to `{python} s17_last` in `{python} last_year`. In four cases in five, then, no physician or court was involved before police detained the person.
 
-And also planes (@fig-planes). (You can change the height and width, but don't worry about doing that until you have finished every other aspect of the paper - Quarto will try to make it look nice and the defaults usually work well once you have enough text.)
-
-```{r}
-#| label: fig-planes
-#| fig-cap: Relationship between wing length and width
-#| echo: false
-#| warning: false
-#| message: false
-
-analysis_data <- read_csv(here::here("data/02-analysis_data/analysis_data.csv"))
-
-analysis_data |> 
-  ggplot(aes(x = width, y = length)) +
-  geom_point(alpha = 0.8) +
-  theme_minimal() +
-  labs(x = "Wing width (mm)",
-       y = "Wing length (mm)")
-```
-
-Talk way more about it. 
-
-## Predictor variables
-
-Add graphs, tables and text.
-
-Use sub-sub-headings for each outcome variable and feel free to combine a few into one if they go together naturally.
-
-
-
-
-
-
-
-
-# Model
-
-The goal of our modelling strategy is twofold. Firstly,...
-
-Here we briefly describe the Bayesian analysis model used to investigate... Background details and diagnostics are included in [Appendix -@sec-model-details].
-
-## Model set-up
-
-Define $y_i$ as the number of seconds that the plane remained aloft. Then $\beta_i$ is the wing width and $\gamma_i$ is the wing length, both measured in millimeters.  
-
-\begin{align} 
-y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \\
-\mu_i &= \alpha + \beta_i + \gamma_i\\
-\alpha &\sim \mbox{Normal}(0, 2.5) \\
-\beta &\sim \mbox{Normal}(0, 2.5) \\
-\gamma &\sim \mbox{Normal}(0, 2.5) \\
-\sigma &\sim \mbox{Exponential}(1)
-\end{align}
-
-We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
-
-
-### Model justification
-
-We expect a positive relationship between the size of the wings and time spent aloft. In particular...
-
-We can use maths by including latex between dollar signs, for instance $\theta$.
-
-
-# Results
-
-Our results are summarized in @tbl-modelresults.
-
-```{r}
-#| echo: false
-#| eval: true
-#| warning: false
-#| message: false
-
-library(rstanarm)
-
-first_model <-
-  readRDS(file = here::here("models/first_model.rds"))
-```
-
-```{r}
-#| echo: false
-#| eval: true
-#| label: tbl-modelresults
-#| tbl-cap: "Explanatory models of flight time based on wing width and wing length"
-#| warning: false
-
-modelsummary::modelsummary(
-  list(
-    "First model" = first_model
-  ),
-  statistic = "mad",
-  fmt = 2
+```{python}
+#| label: tbl-types
+#| tbl-cap: "Four in five apprehensions in 2014–2025 were made under Section 17, on the officer's own judgement. The other authorities carry out a decision by a physician, a justice of the peace or a hospital."
+#| output: asis
+authority = {
+    "Section 17: police officer's own authority": ("Section 17", "Police officer, on scene"),
+    "Section 15: physician's application (Form 1)": ("Section 15 (Form 1)", "Physician"),
+    "Section 16: justice of the peace order (Form 2)": ("Section 16 (Form 2)", "Justice of the peace"),
+    "Section 33.4: community treatment order (Form 47)": ("Section 33.4 (Form 47)", "Physician, community treatment order"),
+    "Section 28: return of absent patient (Form 9)": ("Section 28 (Form 9)", "Hospital, patient absent without leave"),
+}
+types = (
+    apprehensions.group_by("apprehension_type")
+    .len("count")
+    .with_columns((pl.col("count") / pl.col("count").sum()).alias("share"))
+    .sort("count", descending=True)
+    .to_pandas()
+)
+types["section"] = types["apprehension_type"].map(lambda t: authority[t][0])
+types["decided_by"] = types["apprehension_type"].map(lambda t: authority[t][1])
+latex_table(
+    GT(types[["section", "decided_by", "count", "share"]])
+    .cols_label(section="Authority", decided_by="Who decides", count="Apprehensions", share="Share")
+    .fmt_integer(columns="count")
+    .fmt_percent(columns="share", decimals=1)
 )
 ```
 
+## Apprehensions by neighbourhood
 
+Because larger neighbourhoods have more apprehensions simply because more people live there, we compare rates: the average number of apprehensions per year per 1,000 residents. The median neighbourhood has `{python} rate_median`. @fig-map shows that the highest rates are in the downtown core, with further pockets in the northwest and east. Rates range from `{python} f"{lowest['mean_annual_rate_per_1000']:.1f}"` in `{python} lowest['neighbourhood']` to `{python} f"{highest['mean_annual_rate_per_1000']:.1f}"` in `{python} highest['neighbourhood']`.
 
+The downtown figures need care. Apprehensions are recorded where they happen, but rates divide by people who live there. Downtown neighbourhoods contain hospitals, shelters, transit hubs and large daytime populations: `{python} highest['neighbourhood']`, the highest rate, has only `{python} comma(highest['population'])` residents. Residential population is a poor denominator for such places [@andresen2011], so we define a downtown core of `{python} n_downtown` neighbourhoods, those whose centre lies east of Bathurst Street, west of the Don River and south of Bloor Street, and check every result without them.
 
-# Discussion
+```{python}
+#| label: fig-map
+#| fig-cap: "Apprehension rates are highest in the downtown core, with further high-rate areas in the northwest and east. Each of the 158 neighbourhoods is shaded by its average annual apprehensions per 1,000 residents in 2014–2025, grouped into fifths."
+edges = [rates.quantile(q) for q in (0.2, 0.4, 0.6, 0.8)]
+bands = [f"Under {edges[0]:.1f}"] + [f"{a:.1f}–{b:.1f}" for a, b in zip(edges, edges[1:])] + [f"{edges[-1]:.1f} or more"]
+map_data = boundaries.merge(
+    neighbourhoods.with_columns(pl.col("mean_annual_rate_per_1000").cut(edges, labels=bands, left_closed=True).alias("band"))
+    .select("hood_id", "band")
+    .to_pandas(),
+    on="hood_id",
+)
+map_data["band"] = map_data["band"].astype(pd.CategoricalDtype(bands, ordered=True))
+(
+    ggplot(map_data)
+    + geom_map(aes(fill="band"), color="white", size=0.1)
+    + scale_fill_manual(values=SEQUENTIAL_BLUES, name="Per 1,000 residents")
+    + theme_void(base_size=9)
+    + theme(figure_size=(6.5, 3.6), legend_position="bottom", plot_background=element_rect(fill="white", color="white"))
+).draw()
+```
 
-## First discussion point {#sec-first-point}
+## Neighbourhood characteristics
 
-If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
+@tbl-summary summarizes the neighbourhood characteristics used in the model. Neighbourhoods vary widely: the share of households that rent ranges from under 10 per cent to almost 90 per cent, and the Indigenous share of residents, while small everywhere, varies more than seventy-fold. `{python} n_nia` neighbourhoods are designated Neighbourhood Improvement Areas, the City's label for neighbourhoods below its equity benchmark [@tsns2020].
 
-## Second discussion point
+```{python}
+#| label: tbl-summary
+#| tbl-cap: "Toronto's 158 neighbourhoods differ widely in renting, income and population composition. Values are the median and range across neighbourhoods, from the 2021 Census, alongside the average annual apprehension rate for 2014–2025."
+#| output: asis
+rows = {
+    "Apprehensions per 1,000 residents per year": ("mean_annual_rate_per_1000", "{:.1f}"),
+    "Population": ("population", "{:,.0f}"),
+    "Households that rent (%)": ("renter_pct", "{:.0f}"),
+    "Residents in low income (%)": ("low_income_pct", "{:.1f}"),
+    "Indigenous residents (%)": ("indigenous_pct", "{:.1f}"),
+    "Black residents (%)": ("black_pct", "{:.1f}"),
+    "Visible minority residents (%)": ("visible_minority_pct", "{:.0f}"),
+    "Median household income ($)": ("median_household_income", "{:,.0f}"),
+}
+summary = pd.DataFrame(
+    [
+        {
+            "measure": label,
+            "median": fmt.format(neighbourhoods[col].median()),
+            "range": f"{fmt.format(neighbourhoods[col].min())} – {fmt.format(neighbourhoods[col].max())}",
+        }
+        for label, (col, fmt) in rows.items()
+    ]
+)
+latex_table(GT(summary).cols_label(measure="Measure", median="Median", range="Range"))
+```
 
-Please don't use these as sub-heading labels - change them to be what your point actually is.
+@fig-covariates plots every neighbourhood's apprehension rate against each characteristic in the model. Rates rise with renter share, low-income share and Indigenous share, and rise only slightly with Black share. The downtown neighbourhoods, in orange, sit at the top of each panel; outside them the associations with renting and Indigenous share remain, while the one with low income is much weaker. These characteristics are correlated with one another, so the model in @sec-model considers them together.
 
-## Third discussion point
+```{python}
+#| label: fig-covariates
+#| fig-cap: "Apprehension rates rise with the share of households that rent and the share of Indigenous residents. Each point is one neighbourhood; orange points are the downtown core. The vertical axis is on a log scale, and grey lines are least-squares fits on that scale."
+labels = {
+    "renter_pct": "Households that rent (%)",
+    "low_income_pct": "Residents in low income (%)",
+    "indigenous_pct": "Indigenous residents (%)",
+    "black_pct": "Black residents (%)",
+}
+long = (
+    neighbourhoods.with_columns(pl.when("downtown").then(pl.lit("Downtown core")).otherwise(pl.lit("Rest of city")).alias("area"))
+    .unpivot(index=["hood_id", "area", "mean_annual_rate_per_1000"], on=list(labels), variable_name="measure")
+    .with_columns(pl.col("measure").replace_strict(labels))
+    .to_pandas()
+)
+long["measure"] = long["measure"].astype(pd.CategoricalDtype(list(labels.values()), ordered=True))
+(
+    ggplot(long, aes("value", "mean_annual_rate_per_1000"))
+    + geom_point(aes(color="area"), size=1.4, alpha=0.8, stroke=0)
+    + geom_smooth(method="lm", se=False, color=INK_MUTED, size=0.6)
+    + facet_wrap("measure", scales="free_x", ncol=2)
+    + scale_y_log10(breaks=[1, 2, 3, 5, 10, 20])
+    + scale_color_manual(values={"Rest of city": BLUE, "Downtown core": ORANGE})
+    + labs(x="", y="Apprehensions per 1,000 per year")
+    + PAPER_THEME
+    + theme(figure_size=(6.5, 4.4), strip_text=element_text(weight="bold", ha="left"))
+).draw()
+```
+
+## Arrests and strip searches by race
+
+The arrest data contains `{python} n_arrests` records for `{python} n_people` people. @fig-arrest-rates compares, for each perceived-race group, the number of different people arrested at least once in 2020 and 2021 with the number of residents in that group. Black people were arrested at `{python} f"{per_1000['Black']:.1f}"` per 1,000 residents and Indigenous people at `{python} f"{per_1000['Indigenous']:.1f}"`, against `{python} f"{per_1000['White']:.1f}"` for White people. This is consistent with earlier evidence of disproportionate police contact with Black Torontonians [@wortley2011; @meng2017; @ohrc2020]. People arrested include non-residents, and the benchmark counts residents only, so these ratios are approximate.
+
+```{python}
+#| label: fig-arrest-rates
+#| fig-cap: "Black and Indigenous people were arrested at about three times the White rate in 2020–2021, relative to their share of Toronto's population. Bars show the number of different people arrested at least once per 1,000 residents of the same perceived-race group."
+order = people_rates["perceived_race"].to_list()
+(
+    ggplot(people_rates.to_pandas().assign(perceived_race=lambda d: pd.Categorical(d.perceived_race, order, ordered=True)), aes("perceived_race", "per_1000"))
+    + geom_col(fill=BLUE, width=0.6)
+    + coord_flip()
+    + scale_y_continuous(expand=(0, 0, 0.05, 0))
+    + labs(x="", y="People arrested per 1,000 residents")
+    + PAPER_THEME
+    + theme(panel_grid_major_y=element_blank(), figure_size=(6.5, 3))
+).draw()
+```
+
+Until October 2020, Toronto police strip searched a large share of the people they arrested: `{python} strip_pre` of arrests from January to September 2020. Strip searches are lawful only when there are specific grounds for one in the circumstances of an arrest [@golden2001], and a provincial review had found Toronto's rate far above other Ontario services [@oiprd2019]. A new procedure took effect in October 2020, and by the last quarter of 2021 only `{python} strip_post_late` of arrests involved a strip search. @fig-strip-race shows strip search rates among people who were booked, the stage at which searches happen, before and after the change. Before it, more than half of booked Indigenous, Black and White people were strip searched, against about a third of other groups. The rates for Black and White people were almost the same, so the large Black–White difference in this data arises at arrest rather than at the search.
+
+```{python}
+#| label: fig-strip-race
+#| fig-cap: "Before the October 2020 procedure change, more than half of booked Indigenous, Black and White people were strip searched; afterwards rates fell below 6 per cent for every group. Bars show the share of booked arrests that included a strip search."
+before, after = "Jan–Sep 2020", "Oct 2020–Dec 2021"
+by_race = (
+    known.filter(pl.col("booked"))
+    .with_columns(pl.when(pre_change).then(pl.lit(before)).otherwise(pl.lit(after)).alias("period"))
+    .group_by("perceived_race", "period")
+    .agg(pl.col("strip_searched").mean().alias("rate"))
+    .to_pandas()
+)
+race_order = by_race.query("period == @before").sort_values("rate").perceived_race.tolist()
+by_race["perceived_race"] = pd.Categorical(by_race.perceived_race, race_order, ordered=True)
+by_race["period"] = pd.Categorical(by_race.period, [after, before], ordered=True)
+(
+    ggplot(by_race, aes("perceived_race", "rate", fill="period"))
+    + geom_col(position=position_dodge(width=0.8), width=0.75)
+    + coord_flip()
+    + scale_fill_manual(values={before: BLUE, after: ORANGE}, breaks=[before, after])
+    + scale_y_continuous(labels=percent_format(), expand=(0, 0, 0.05, 0))
+    + labs(x="", y="Booked arrests with a strip search")
+    + PAPER_THEME
+    + theme(panel_grid_major_y=element_blank(), figure_size=(6.5, 3.6))
+).draw()
+```
+
+Officers flagged `{python} flag_share` of arrests as involving "mental instability or possibly suicidal" behaviour. This flag is the arrest data's link to crisis policing, and @sec-results models how it relates to strip searches.
+
+## Ethics
+
+Both datasets describe people at difficult moments, and some of them more than once. The published data contains no names, exact locations or dates of birth; apprehension records of young people are withheld, and arrest records give only quarters and police divisions. We report only aggregates. Two ethical points shape how the results should be read. Race in the arrest data is an officer's perception, so it measures how police see people, not how people identify. And the apprehension analysis describes neighbourhoods, not individuals: a higher rate where more Indigenous people live does not show that Indigenous residents are apprehended more, and we do not claim that it does.
+
+# Model {#sec-model}
+
+## Apprehension rates
+
+We model the number of apprehensions $y_{it}$ in neighbourhood $i$ in year $t$ as negative binomial, with the neighbourhood's population $N_i$ as exposure:
+
+$$
+\begin{aligned}
+y_{it} &\sim \text{NegativeBinomial}(\mu_{it}, \alpha) \\
+\log \mu_{it} &= \log N_i + \beta_0 + \beta_1 \text{Renter}_i + \beta_2 \text{LowIncome}_i + \beta_3 \text{Indigenous}_i + \beta_4 \text{Black}_i + \beta_5 \text{NIA}_i + \gamma_t
+\end{aligned}
+$$
+
+where the four shares are standardized to mean zero and standard deviation one across neighbourhoods, NIA indicates a Neighbourhood Improvement Area, and $\gamma_t$ are year effects. Each $\exp(\beta_k)$ is a rate ratio: the multiplicative change in the apprehension rate for a one-standard-deviation increase in that characteristic, holding the others and the year fixed.
+
+Three choices follow from the data. Counts are far more variable than a Poisson model allows (the neighbourhood-year mean is `{python} f"{panel_mean:.0f}"` and the variance `{python} f"{panel_var:,.0f}"`), so we use the negative binomial, whose dispersion parameter $\alpha$ is estimated at `{python} overdispersion`. Year effects absorb citywide changes, including the 2021 peak and the launch of the Community Crisis Service, so the $\beta_k$ compare neighbourhoods within the same year. And because each neighbourhood appears twelve times, standard errors are clustered by neighbourhood. Median household income is left out because it is strongly correlated with low-income share ($r = -0.70$); with both in the model, variance inflation factors stay below 2.5, and without it they stay near 2. The model is fitted with statsmodels [@statsmodels] on 1,896 neighbourhood-years.
+
+We fit the model four times: on all apprehensions; excluding the `{python} n_downtown` downtown neighbourhoods; on Section 17 apprehensions only; and on the other authorities only. The last two compare apprehensions where the officer decided with those where a physician or court did. If officers' discretion is shaped by the character of places [@morabito2007], Section 17 should track neighbourhood characteristics more closely.
+
+Before fitting the model to real data, we fitted it to simulated data in which the true effects are known. It recovered them (@sec-appendix-checks).
+
+## Strip searches
+
+For the arrest data we fit a logistic regression of whether a booked person was strip searched, among arrests from January to September 2020, before the procedure change:
+
+$$
+\text{logit}\, \Pr(\text{Strip}_j = 1) = \delta_0 + \delta_1 \text{Flag}_j + \sum_g \theta_g \text{Race}_{jg} + \sum_g \lambda_g (\text{Flag}_j \times \text{Race}_{jg}) + \mathbf{x}_j' \boldsymbol{\eta}
+$$
+
+where $\text{Flag}_j$ indicates that the officer recorded mental instability, race groups are Black, Indigenous and other groups (East and Southeast Asian, South Asian, Middle-Eastern and Latino combined) with White as the reference, and $\mathbf{x}_j$ holds offence category, age group and sex. The interaction terms $\lambda_g$ test whether the flag's association with strip searching differs by group. Standard errors are clustered by person because some people were arrested several times.
+
+# Results {#sec-results}
+
+## Neighbourhood characteristics and apprehension rates
+
+@tbl-rate-ratios and @fig-rate-ratios report the rate ratios. Across all neighbourhoods, a one-standard-deviation increase in renter share is associated with a rate ratio of `{python} rr("All apprehensions", "renter_pct")`, and in Indigenous share `{python} rr("All apprehensions", "indigenous_pct")`. Low-income share has a smaller association, `{python} rr("All apprehensions", "low_income_pct")`. Black share, `{python} rr("All apprehensions", "black_pct")`, and Improvement Area status, `{python} rr("All apprehensions", "nia")`, are not distinguishable from no association.
+
+Excluding the downtown core leaves the renter and Indigenous associations essentially unchanged, `{python} rr("Excluding downtown core", "renter_pct", False)` and `{python} rr("Excluding downtown core", "indigenous_pct", False)`, but removes the low-income association, `{python} rr("Excluding downtown core", "low_income_pct")`. The link between poverty and apprehensions in the full model therefore comes from the downtown core, where residential rates are least reliable.
+
+Section 17 apprehensions follow almost the same pattern as all apprehensions. They are not more closely tied to neighbourhood characteristics than apprehensions authorized by others; if anything, the other authorities track low income, `{python} rr("Other apprehension types", "low_income_pct", False)`, and Indigenous share, `{python} rr("Other apprehension types", "indigenous_pct", False)`, more strongly, though with wider intervals.
+
+```{python}
+#| label: tbl-rate-ratios
+#| tbl-cap: "Renter share and Indigenous share are associated with higher apprehension rates in every specification. Rate ratios per one-standard-deviation increase (per 1 for Improvement Area status), with 95% confidence intervals, from negative binomial models with population exposure, year effects and standard errors clustered by neighbourhood."
+#| output: asis
+term_labels = {
+    "renter_pct": "Households that rent",
+    "low_income_pct": "Residents in low income",
+    "indigenous_pct": "Indigenous residents",
+    "black_pct": "Black residents",
+    "nia": "Improvement Area",
+}
+models = ["All apprehensions", "Excluding downtown core", "Section 17 only", "Other apprehension types"]
+cells = rate_ratios.assign(cell=lambda d: d.apply(lambda r: f"{r.estimate:.2f} ({r.ci_low:.2f}–{r.ci_high:.2f})", axis=1))
+wide = cells.pivot(index="term", columns="model", values="cell").loc[list(term_labels), models].reset_index()
+wide["term"] = wide["term"].map(term_labels)
+footer = pd.DataFrame(
+    [
+        {"term": "Neighbourhood-years", **{m: comma(model_fit.set_index("model").loc[m, "n"]) for m in models}},
+        {"term": "Dispersion (alpha)", **{m: f"{model_fit.set_index('model').loc[m, 'alpha']:.2f}" for m in models}},
+    ]
+)
+table = pd.concat([wide, footer], ignore_index=True)
+latex_table(
+    GT(table).cols_label(
+        term="",
+        **{"All apprehensions": "All", "Excluding downtown core": "Excl. downtown", "Section 17 only": "Section 17", "Other apprehension types": "Other types"},
+    )
+)
+```
+
+```{python}
+#| label: fig-rate-ratios
+#| fig-cap: "The associations with renter share and Indigenous share hold across specifications, while the low-income association disappears without the downtown core. Points are rate ratios and lines are 95% confidence intervals; values above 1 mean higher apprehension rates."
+forest = rate_ratios.assign(
+    term=lambda d: pd.Categorical(d.term.map(term_labels), list(term_labels.values())[::-1], ordered=True),
+    model=lambda d: pd.Categorical(d.model, models, ordered=True),
+)
+(
+    ggplot(forest, aes("term", "estimate", ymin="ci_low", ymax="ci_high", color="model"))
+    + geom_hline(yintercept=1, linetype="dashed", color=INK_MUTED)
+    + geom_pointrange(position=position_dodge(width=0.6), size=0.4)
+    + coord_flip()
+    + scale_color_manual(values=dict(zip(models, [BLUE, ORANGE, "#1baf7a", "#4a3aa7"])))
+    + labs(x="", y="Rate ratio", color="")
+    + PAPER_THEME
+    + theme(figure_size=(6.5, 3.6))
+).draw()
+```
+
+## Mental health flags and strip searches
+
+Among booked arrests before the procedure change, a mental-instability flag is associated with much higher odds of a strip search: an odds ratio of `{python} f"{flag_or.estimate:.2f}"` (95% CI `{python} f"{flag_or.ci_low:.2f}"`–`{python} f"{flag_or.ci_high:.2f}"`) for White people, after adjusting for offence, age and sex. For Black people the association is larger, with an interaction odds ratio of `{python} f"{black_flag_or.estimate:.2f}"` (95% CI `{python} f"{black_flag_or.ci_low:.2f}"`–`{python} f"{black_flag_or.ci_high:.2f}"`). @fig-strip-predicted converts the model to probabilities. Without a flag, booked Black and White people had similar predicted probabilities of a strip search, `{python} pred_pct("Black", False)` and `{python} pred_pct("White", False)`. With a flag, the probability rose to `{python} pred_pct("White", True)` for White people and `{python} pred_pct("Black", True)` for Black people. The estimate for Indigenous people rests on 29 flagged arrests and is too uncertain to interpret. Full estimates are in @sec-appendix-strip.
+
+```{python}
+#| label: fig-strip-predicted
+#| fig-cap: "A mental-instability flag raised the predicted probability of a strip search for every group, most of all for Black people. Average predicted probabilities among booked arrests in January–September 2020, adjusted for offence, age and sex; lines are 95% intervals from 2,000 draws of the model coefficients."
+sp = strip_predicted.assign(
+    flag=lambda d: np.where(d.mental_instability, "Flagged mental instability", "Not flagged"),
+    race_group=lambda d: pd.Categorical(d.race_group, ["Other groups", "Indigenous", "White", "Black"], ordered=True),
+)
+(
+    ggplot(sp, aes("race_group", "predicted_probability", ymin="ci_low", ymax="ci_high", color="flag"))
+    + geom_pointrange(position=position_dodge(width=0.5), size=0.5)
+    + coord_flip()
+    + scale_color_manual(values={"Not flagged": BLUE, "Flagged mental instability": ORANGE})
+    + scale_y_continuous(labels=percent_format(), limits=(0.3, 0.9))
+    + labs(x="", y="Predicted probability of a strip search", color="")
+    + PAPER_THEME
+    + theme(figure_size=(6.5, 3.2))
+).draw()
+```
+
+# Discussion {#sec-discussion}
+
+## Crisis policing follows renting and Indigenous presence
+
+The clearest result is that apprehensions are more frequent where more households rent and more Indigenous people live, and that this holds outside the downtown core. Renting is likely a marker of several things the census does not measure directly: residential instability, rooming houses and supportive housing, and fewer private resources to manage a crisis without calling 9-1-1. Research in Toronto has found that homeless people with mental illness have more police interactions than those who are housed [@kouyoumdjian2019], and research in England has found compulsory psychiatric admission more likely in deprived and more ethnically diverse small areas [@weich2017]. Our results fit both. The association with Indigenous share is consistent with the over-representation of Indigenous people in police contact more broadly, although with neighbourhood data we cannot say whether Indigenous residents themselves are apprehended more.
+
+Two expected associations were weak. Neighbourhood poverty mattered only because of the downtown core, and the City's designation of disadvantaged neighbourhoods added nothing once renting and Indigenous share were in the model. Crisis policing therefore follows specific features of neighbourhoods rather than a general measure of disadvantage. Black population share also had little association at the neighbourhood level. This does not contradict research showing that Black people are more likely to reach psychiatric care through police [@anderson2014]: three of the five lowest-rate neighbourhoods are over 90 per cent visible minority, and neighbourhood composition is a poor guide to who is detained.
+
+## Officer discretion is not more place-bound
+
+We expected officer-initiated apprehensions to track neighbourhood characteristics more closely than those authorized by physicians or courts. They did not. One explanation is that the decision that matters is not the officer's but the call: officers can only apprehend people they are called to, and calls depend on who is present, who is watching and who has other options. The other authorities, which often involve people already known to mental health services, may be even more concentrated in places with supportive housing and treatment programs.
+
+## Race and crisis at arrest
+
+The arrest data shows that the largest racial disparity is in who is arrested at all. Black and Indigenous people were arrested at about three times the White rate, a gap similar to the Ontario Human Rights Commission's finding for 2013–2017 [@ohrc2020]. Once booked, Black and White people were strip searched at almost the same rate, and searches found items at similar rates for every group (@sec-appendix-stages), which is consistent with, but does not prove, equal search standards [@knowles2001; @simoiu2017]. The finding that bears most directly on crisis policing is that a mental-instability flag made a strip search far more likely, and more so for Black people. People in apparent crisis were subjected to the most intrusive search police conduct, which is consistent with evidence that apparent mental illness makes police encounters more coercive [@kesic2013].
+
+## The Community Crisis Service
+
+Apprehensions fell after the Community Crisis Service began in 2022 and then partly recovered. With year effects absorbing this change, our models say nothing about whether the service reduced apprehensions. The service received about 4,500 eligible 9-1-1 calls in 2025, compared with roughly 12,700 apprehensions [@tccs2026], so its reach is still limited. Because its pilots started in specific areas before expanding, a comparison of pilot and non-pilot neighbourhoods before and after 2022, of the kind used to evaluate Denver's similar program [@deepyne2022], could estimate its effect.
 
 ## Weaknesses and next steps
 
-Weaknesses and next steps should also be included.
+The analysis has several limitations. It is ecological: neighbourhood associations do not describe individuals. The residential denominator distorts rates in the downtown core, and although our results hold without it, high-traffic places outside downtown, such as the area around the Centre for Addiction and Mental Health in West Queen West, are affected too. An ambient-population denominator would be better [@andresen2011]. Census characteristics are fixed at 2021, while apprehensions span twelve years. The data contains no person identifier, so a small number of people detained repeatedly may weigh heavily in some neighbourhoods. The arrest data covers only 2020 and 2021, years shaped by the pandemic, relies on officers' perceptions of race and behaviour, and has small numbers of flagged people in some groups.
+
+Three extensions would address these. Linking apprehensions to health records, as Ontario studies of involuntary admission have done [@lebenbaum2018], would show who is detained and what happens next. A pilot-area comparison could evaluate the Community Crisis Service. And publication of apprehension data with the person's race, as Toronto now does for arrests, would allow the individual-level analysis that the neighbourhood data cannot support.
 
 \newpage
 
 \appendix
 
-# Appendix {-}
+# Data cleaning {#sec-appendix-cleaning}
 
+- **Period.** We keep apprehensions that occurred from 2014 to the last complete calendar year, `{python} last_year`, dropping 13 records with earlier occurrence dates and the partial current year.
+- **Missing codes.** "NSA" and "Not Recorded" values are treated as missing.
+- **Repeated incidents.** Some incidents involve more than one person and share an incident number. All rows are kept because each is a separate apprehension, and there is no person identifier with which to identify duplicates.
+- **Neighbourhood panel.** Every neighbourhood-year appears, with zeros where there were no apprehensions.
+- **Downtown core.** We define it as neighbourhoods whose centroid lies east of Bathurst Street (longitude −79.4065), west of the Don River (−79.356) and south of Bloor Street (latitude 43.6705), approximating the City's Downtown Plan area.
+- **Arrest data.** Labels that changed between 2020 and 2021 (offence categories, age groups, youth status) are combined into one scheme. Strip searches without a recorded booking are treated as booked, following the source documentation. Our cleaned data reproduces the Toronto Police Service's published strip search rate of 22.2 per cent for 2020 [@tps2022].
+- **Tests.** Every cleaned and simulated table is checked by automated tests for schema, valid values, internal consistency and agreement with the raw data.
 
-# Additional data details
+# Model checks {#sec-appendix-checks}
 
-# Model details {#sec-model-details}
+## Recovery of simulated effects
 
-## Posterior predictive check
+We simulated neighbourhood-year counts in which the log apprehension rate rises by 0.015 per percentage point of renter households and falls by 0.6 per unit of log median income, with overdispersion $\alpha = 0.2$. Fitting the same model specification to the simulated data recovers these values (@tbl-recovery).
 
-In @fig-ppcheckandposteriorvsprior-1 we implement a posterior predictive check. This shows...
-
-In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. This shows... 
-
-```{r}
-#| eval: true
-#| echo: false
-#| message: false
-#| warning: false
-#| label: fig-ppcheckandposteriorvsprior
-#| layout-ncol: 2
-#| fig-cap: "Examining how the model fits, and is affected by, the data"
-#| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
-
-pp_check(first_model) +
-  theme_classic() +
-  theme(legend.position = "bottom")
-
-posterior_vs_prior(first_model) +
-  theme_minimal() +
-  scale_color_brewer(palette = "Set1") +
-  theme(legend.position = "bottom") +
-  coord_flip()
+```{python}
+#| label: tbl-recovery
+#| tbl-pos: H
+#| tbl-cap: "The negative binomial specification recovers the effects built into the simulated data. True values are those used to simulate; estimates and 95% confidence intervals are from fitting the model to the simulation."
+#| output: asis
+sim_hoods = pl.read_parquet(SIM / "neighbourhoods.parquet")
+sim_panel = (
+    pl.read_parquet(SIM / "neighbourhood_year.parquet")
+    .join(sim_hoods.select("hood_id", "renter_pct", "median_household_income"), on="hood_id")
+    .to_pandas()
+)
+sim_fit = smf.negativebinomial(
+    "apprehensions ~ renter_pct + np.log(median_household_income) + C(year)",
+    data=sim_panel,
+    offset=np.log(sim_panel["population"]),
+).fit(disp=0, maxiter=300, cov_type="cluster", cov_kwds={"groups": sim_panel["hood_id"]})
+ci = sim_fit.conf_int()
+recovery = pd.DataFrame(
+    {
+        "parameter": ["Renter share (per point)", "Log median income", "Dispersion (alpha)"],
+        "true": [0.015, -0.6, 0.2],
+        "estimate": [sim_fit.params["renter_pct"], sim_fit.params["np.log(median_household_income)"], sim_fit.params["alpha"]],
+        "interval": [
+            f"{ci.loc['renter_pct', 0]:.3f} to {ci.loc['renter_pct', 1]:.3f}",
+            f"{ci.loc['np.log(median_household_income)', 0]:.2f} to {ci.loc['np.log(median_household_income)', 1]:.2f}",
+            "",
+        ],
+    }
+)
+latex_table(
+    GT(recovery)
+    .cols_label(parameter="Parameter", true="True value", estimate="Estimate", interval="95% CI")
+    .fmt_number(columns=["true", "estimate"], decimals=3)
+)
 ```
 
-## Diagnostics
+## Fit to observed counts
 
-@fig-stanareyouokay-1 is a trace plot. It shows... This suggests...
+@fig-fitted compares the main model's fitted counts with the observed counts for every neighbourhood-year. Points lie close to the diagonal across the range, with the largest residuals in a few downtown neighbourhoods.
 
-@fig-stanareyouokay-2 is a Rhat plot. It shows... This suggests...
-
-```{r}
-#| echo: false
-#| eval: true
-#| message: false
-#| warning: false
-#| label: fig-stanareyouokay
-#| fig-cap: "Checking the convergence of the MCMC algorithm"
-#| fig-subcap: ["Trace plot", "Rhat plot"]
-#| layout-ncol: 2
-
-plot(first_model, "trace")
-
-plot(first_model, "rhat")
+```{python}
+#| label: fig-fitted
+#| fig-pos: H
+#| fig-cap: "The main model's fitted counts track the observed counts across all 1,896 neighbourhood-years. Each point is one neighbourhood in one year; orange points are the downtown core; the dashed line marks perfect agreement. Both axes are on a log scale."
+(
+    ggplot(fitted.assign(area=lambda d: np.where(d.downtown, "Downtown core", "Rest of city")), aes("fitted", "apprehensions", color="area"))
+    + geom_abline(intercept=0, slope=1, linetype="dashed", color=INK_MUTED)
+    + geom_point(size=0.8, alpha=0.5, stroke=0)
+    + scale_x_log10()
+    + scale_y_log10()
+    + scale_color_manual(values={"Rest of city": BLUE, "Downtown core": ORANGE})
+    + labs(x="Fitted apprehensions", y="Observed apprehensions", color="")
+    + PAPER_THEME
+    + theme(figure_size=(5.5, 4))
+).draw()
 ```
 
+# Strip search model {#sec-appendix-strip}
+
+```{python}
+#| label: tbl-strip-odds
+#| tbl-pos: H
+#| tbl-cap: "A mental-instability flag nearly triples the odds of a strip search, and the increase is larger for Black people. Odds ratios with 95% confidence intervals from a logistic regression of strip searching among booked arrests in January–September 2020, adjusted for offence category, age group and sex, with standard errors clustered by person. White people are the reference group."
+#| output: asis
+term_names = {
+    "mental_instability": "Mental-instability flag",
+    "Black": "Black",
+    "Indigenous": "Indigenous",
+    "Other groups": "Other groups",
+}
 
 
-\newpage
+def label_term(term):
+    group = next((g for g in ["Black", "Indigenous", "Other groups"] if g in term), None)
+    if term == "mental_instability":
+        return term_names[term]
+    return f"Flag × {group}" if term.startswith("mental_instability:") else group
 
 
-# References
+odds = strip_odds.assign(term=lambda d: d.term.map(label_term))
+latex_table(
+    GT(odds[["term", "estimate", "ci_low", "ci_high", "p_value"]])
+    .cols_label(term="Term", estimate="Odds ratio", ci_low="95% CI low", ci_high="95% CI high", p_value="p-value")
+    .fmt_number(columns=["estimate", "ci_low", "ci_high"], decimals=2)
+    .fmt_number(columns="p_value", decimals=3)
+)
+```
 
+# Disparities at each stage of contact {#sec-appendix-stages}
 
+@tbl-stages follows each perceived-race group from the population through arrest, booking and strip search before the October 2020 procedure change, and reports how often strip searches found items. The largest departure from population shares is at arrest. Booking and strip search rates for Black and White people are similar, and the share of strip searches that found items is similar for every group.
+
+```{python}
+#| label: tbl-stages
+#| tbl-pos: H
+#| tbl-cap: "The largest racial disparity is at arrest; booking, strip search and search outcomes differ much less between Black and White people. Population share is from the 2021 Census; arrest share counts different people arrested in 2020–2021; booking and strip search rates are for January–September 2020; items found is the share of all strip searches in 2020–2021 that found items."
+#| output: asis
+stages = (
+    known.group_by("perceived_race")
+    .agg(
+        pl.col("person_id").n_unique().alias("people"),
+        pl.col("booked").filter(pre_change).mean().alias("booked_rate"),
+        pl.col("strip_searched").filter(pre_change & pl.col("booked")).mean().alias("strip_rate"),
+        pl.col("items_found").filter(pl.col("strip_searched")).mean().alias("items_rate"),
+    )
+    .join(population_by_race, on="perceived_race")
+    .with_columns(
+        (pl.col("population") / pl.col("population").sum()).alias("population_share"),
+        (pl.col("people") / pl.col("people").sum()).alias("arrest_share"),
+    )
+    .sort("population_share", descending=True)
+    .select("perceived_race", "population_share", "arrest_share", "booked_rate", "strip_rate", "items_rate")
+    .to_pandas()
+)
+latex_table(
+    GT(stages)
+    .cols_label(
+        perceived_race="Perceived race",
+        population_share="Population",
+        arrest_share="People arrested",
+        booked_rate="Booked",
+        strip_rate="Strip searched",
+        items_rate="Items found",
+    )
+    .fmt_percent(columns=["population_share", "arrest_share", "booked_rate", "strip_rate", "items_rate"], decimals=0)
+)
+```
+
+# References {.unnumbered}
+
+::: {#refs}
+:::
