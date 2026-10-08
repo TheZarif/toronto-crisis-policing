@@ -1,0 +1,9 @@
+race_group,mental_instability,predicted_probability,flagged_in_group
+White,False,0.5058330305355213,310
+White,True,0.7117065971954687,310
+Black,False,0.4870290335465155,230
+Black,True,0.7899999545752718,230
+Indigenous,False,0.5752691208040432,29
+Indigenous,True,0.6219183743008985,29
+Other groups,False,0.3745568926601558,111
+Other groups,True,0.6065840383492311,111

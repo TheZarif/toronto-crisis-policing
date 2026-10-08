@@ -47,6 +47,7 @@ NEIGHBOURHOODS_SCHEMA = {
     "black_pct": pl.Float64,
     "indigenous_pct": pl.Float64,
     "renter_pct": pl.Float64,
+    "downtown": pl.Boolean,
     "total_apprehensions": pl.Int32,
     "mean_annual_rate_per_1000": pl.Float64,
 }
@@ -55,6 +56,7 @@ NEIGHBOURHOOD_YEAR_SCHEMA = {
     "population": pl.Int32,
     "year": pl.Int16,
     "apprehensions": pl.Int32,
+    "section_17": pl.Int32,
     "rate_per_1000": pl.Float64,
 }
 
@@ -179,6 +181,16 @@ class TableChecks:
     def test_panel_values_valid(self, neighbourhood_year):
         assert neighbourhood_year.null_count().sum_horizontal().item() == 0
         assert (neighbourhood_year["apprehensions"] >= 0).all()
+
+    def test_section_17_within_total(self, neighbourhood_year):
+        assert neighbourhood_year["section_17"].is_between(0, neighbourhood_year["apprehensions"]).all()
+
+    def test_section_17_matches_apprehensions(self, apprehensions, neighbourhood_year):
+        rows = apprehensions.drop_nulls("hood_id")["apprehension_type"].str.starts_with("Section 17").sum()
+        assert neighbourhood_year["section_17"].sum() == rows
+
+    def test_downtown_core_has_13_neighbourhoods(self, neighbourhoods):
+        assert neighbourhoods["downtown"].sum() == 13
 
     def test_rate_matches_count_and_population(self, neighbourhood_year):
         expected = 1000 * neighbourhood_year["apprehensions"] / neighbourhood_year["population"]

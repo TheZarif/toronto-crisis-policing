@@ -81,6 +81,8 @@ neighbourhoods = pl.DataFrame(
         "black_pct": visible_minority_pct * rng.uniform(0.05, 0.35, N_NEIGHBOURHOODS),
         "indigenous_pct": rng.uniform(0.05, 3, N_NEIGHBOURHOODS),
         "renter_pct": renter_pct,
+        # 13 neighbourhoods form the downtown core, as in the real data.
+        "downtown": np.isin(np.arange(N_NEIGHBOURHOODS), rng.choice(N_NEIGHBOURHOODS, 13, replace=False)),
     },
     schema_overrides={"hood_id": pl.Int16, "population": pl.Int32},
 )
@@ -88,6 +90,8 @@ neighbourhoods = pl.DataFrame(
 
 #### Simulate neighbourhood-year counts ####
 # Log rate per 1,000 residents: baseline ~3.5, higher with renters, lower with income.
+# Counts are negative binomial (gamma-Poisson) because real counts are overdispersed.
+NB_SHAPE = 5
 log_rate = (
     np.log(3.5)
     + 0.015 * (renter_pct - renter_pct.mean())
@@ -99,7 +103,8 @@ for i, hood_id in enumerate(hood_ids):
     for year in YEARS:
         trend = 1 + 0.04 * (year - YEARS[0])
         expected = np.exp(log_rate[i]) * trend * neighbourhoods["population"][i] / 1000
-        panel_rows.append((hood_id, year, rng.poisson(expected)))
+        overdispersed = expected * rng.gamma(NB_SHAPE, 1 / NB_SHAPE)
+        panel_rows.append((hood_id, year, rng.poisson(overdispersed)))
 
 neighbourhood_year = (
     pl.DataFrame(panel_rows, schema={"hood_id": pl.Int16, "year": pl.Int16, "apprehensions": pl.Int32}, orient="row")
@@ -157,6 +162,19 @@ apprehensions = (
         "year",
     )
     .sort("occurrence_date", "event_id")
+)
+
+
+# Section 17 counts per neighbourhood-year, derived from the simulated rows.
+section_17 = (
+    apprehensions.group_by("hood_id", "year")
+    .agg(pl.col("apprehension_type").str.starts_with("Section 17").sum().cast(pl.Int32).alias("section_17"))
+)
+neighbourhood_year = (
+    neighbourhood_year.join(section_17, on=["hood_id", "year"], how="left")
+    .with_columns(pl.col("section_17").fill_null(0))
+    .select("hood_id", "population", "year", "apprehensions", "section_17", "rate_per_1000")
+    .sort("hood_id", "year")
 )
 
 

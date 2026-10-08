@@ -2,7 +2,9 @@
 # Purpose: Cleans raw apprehension, boundary and census data into analysis tables:
 #   - apprehensions.parquet: one row per apprehension, 2014 to last complete year
 #   - neighbourhoods.parquet: one row per neighbourhood with census covariates
-#   - neighbourhood_year.parquet: apprehension counts and rates per neighbourhood-year
+#     and a downtown flag
+#   - neighbourhood_year.parquet: apprehension counts (all and Section 17) and
+#     rates per neighbourhood-year
 #   - neighbourhood_boundaries.geojson: 158-model boundaries keyed by hood_id
 #   - arrests.parquet: one row per person arrested (or strip searched), 2020-2021
 #   - population_by_race.parquet: 2021 Toronto population in police race categories
@@ -24,6 +26,10 @@ OUT_DIR = Path("data/02-analysis_data")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 FIRST_YEAR = 2014
+
+# Downtown core, approximating the City's Downtown Plan area: neighbourhoods whose
+# centroid lies east of Bathurst Street, west of the Don River and south of Bloor Street.
+DOWNTOWN_WEST_LON, DOWNTOWN_EAST_LON, DOWNTOWN_NORTH_LAT = -79.4065, -79.356, 43.6705
 
 APPREHENSION_TYPES = {
     "Mha Sec 17 (Power Of App)": "Section 17: police officer's own authority",
@@ -146,6 +152,19 @@ boundaries = boundaries.assign(
     neighbourhood=boundaries["AREA_NAME"].str.replace(r"\s*\(\d+\)$", "", regex=True),
 )[["hood_id", "neighbourhood", "geometry"]].sort_values("hood_id")
 
+# Centroids in a projected CRS (UTM 17N) to avoid distortion, then back to lon/lat.
+centroids = boundaries.to_crs(32617).centroid.to_crs(4326)
+downtown = pl.DataFrame(
+    {
+        "hood_id": boundaries["hood_id"].to_numpy(),
+        "downtown": (
+            centroids.x.between(DOWNTOWN_WEST_LON, DOWNTOWN_EAST_LON)
+            & (centroids.y < DOWNTOWN_NORTH_LAT)
+        ).to_numpy(),
+    },
+    schema={"hood_id": pl.Int16, "downtown": pl.Boolean},
+)
+
 
 #### Clean 2021 census profiles ####
 # The profile is wide (one row per census characteristic, one column per
@@ -209,6 +228,7 @@ neighbourhoods = (
         coalesce=True,
         validate="1:1",
     )
+    .join(downtown, on="hood_id", how="left", validate="1:1")
     .select("hood_id", "neighbourhood", pl.exclude("hood_id", "neighbourhood"))
     .sort("hood_id")
 )
@@ -217,13 +237,20 @@ neighbourhoods = (
 #### Build neighbourhood-year panel ####
 # Cross join so neighbourhood-years with no apprehensions appear as zeros.
 years = pl.DataFrame({"year": range(FIRST_YEAR, last_complete_year + 1)}, schema={"year": pl.Int16})
-counts = apprehensions.drop_nulls("hood_id").group_by("hood_id", "year").len("apprehensions")
+counts = (
+    apprehensions.drop_nulls("hood_id")
+    .group_by("hood_id", "year")
+    .agg(
+        pl.len().alias("apprehensions"),
+        pl.col("apprehension_type").str.starts_with("Section 17").sum().alias("section_17"),
+    )
+)
 
 neighbourhood_year = (
     neighbourhoods.select("hood_id", "population")
     .join(years, how="cross")
     .join(counts, on=["hood_id", "year"], how="left")
-    .with_columns(pl.col("apprehensions").fill_null(0).cast(pl.Int32))
+    .with_columns(pl.col("apprehensions", "section_17").fill_null(0).cast(pl.Int32))
     .with_columns((1000 * pl.col("apprehensions") / pl.col("population")).alias("rate_per_1000"))
     .sort("hood_id", "year")
 )
