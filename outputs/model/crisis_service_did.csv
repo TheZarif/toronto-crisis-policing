@@ -1,0 +1,2 @@
+model,term,estimate,ci_low,ci_high,p_value,n,divisions,pilot_divisions,alpha
+Pilot divisions after launch,treated[T.True],1.0361423574777862,0.8087277649094582,1.327506030511787,0.7788449228312998,1564,17,9,0.03236182560326675

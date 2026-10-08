@@ -21,7 +21,9 @@ SEXES = {"Male", "Female"}
 AGE_GROUPS = {"18 to 24", "25 to 34", "35 to 44", "45 to 54", "55 to 64", "65+"}
 PREMISES = {"Apartment", "House", "Outside", "Other", "Commercial", "Transit", "Educational"}
 TSNS_DESIGNATIONS = {"Improvement Area", "Emerging", "Neither"}
-PERCENT_COLUMNS = ["low_income_pct", "visible_minority_pct", "black_pct", "indigenous_pct", "renter_pct"]
+GROUP_COLUMNS = ["black_pct", "south_asian_pct", "east_southeast_asian_pct", "middle_eastern_pct", "latin_american_pct"]
+PERCENT_COLUMNS = ["low_income_pct", "visible_minority_pct", *GROUP_COLUMNS, "indigenous_pct", "renter_pct"]
+PILOT_DIVISIONS = {"D12", "D14", "D23", "D31", "D41", "D42", "D43", "D51", "D52"}
 
 APPREHENSIONS_SCHEMA = {
     "event_id": pl.String,
@@ -45,6 +47,10 @@ NEIGHBOURHOODS_SCHEMA = {
     "low_income_pct": pl.Float64,
     "visible_minority_pct": pl.Float64,
     "black_pct": pl.Float64,
+    "south_asian_pct": pl.Float64,
+    "east_southeast_asian_pct": pl.Float64,
+    "middle_eastern_pct": pl.Float64,
+    "latin_american_pct": pl.Float64,
     "indigenous_pct": pl.Float64,
     "renter_pct": pl.Float64,
     "downtown": pl.Boolean,
@@ -58,6 +64,13 @@ NEIGHBOURHOOD_YEAR_SCHEMA = {
     "apprehensions": pl.Int32,
     "section_17": pl.Int32,
     "rate_per_1000": pl.Float64,
+}
+DIVISION_MONTH_SCHEMA = {
+    "police_division": pl.String,
+    "month": pl.Date,
+    "apprehensions": pl.Int32,
+    "pilot": pl.Boolean,
+    "launch_date": pl.Date,
 }
 
 PERCEIVED_RACES = {
@@ -165,8 +178,9 @@ class TableChecks:
         for column in PERCENT_COLUMNS:
             assert neighbourhoods[column].is_between(0, 100).all(), column
 
-    def test_black_share_within_visible_minority(self, neighbourhoods):
-        assert (neighbourhoods["black_pct"] <= neighbourhoods["visible_minority_pct"]).all()
+    def test_group_shares_within_visible_minority(self, neighbourhoods):
+        groups = neighbourhoods.select(pl.sum_horizontal(GROUP_COLUMNS))[:, 0]
+        assert (groups <= neighbourhoods["visible_minority_pct"] + 1e-9).all()
 
     def test_tsns_designation_valid(self, neighbourhoods):
         assert not values_outside(neighbourhoods["tsns_designation"], TSNS_DESIGNATIONS)
@@ -195,6 +209,27 @@ class TableChecks:
     def test_rate_matches_count_and_population(self, neighbourhood_year):
         expected = 1000 * neighbourhood_year["apprehensions"] / neighbourhood_year["population"]
         assert ((neighbourhood_year["rate_per_1000"] - expected).abs() < 1e-9).all()
+
+    #### Division-month panel ####
+    def test_division_month_schema(self, division_month):
+        assert dict(division_month.schema) == DIVISION_MONTH_SCHEMA
+
+    def test_division_month_is_complete_grid(self, division_month):
+        divisions = division_month["police_division"].n_unique()
+        months = division_month["month"].n_unique()
+        assert divisions == 17
+        assert division_month.height == divisions * months
+        assert not division_month.select("police_division", "month").is_duplicated().any()
+        assert (division_month["month"].dt.day() == 1).all()
+
+    def test_pilot_divisions_and_launch_dates(self, division_month):
+        pilots = division_month.filter(pl.col("pilot"))
+        assert set(pilots["police_division"]) == PILOT_DIVISIONS
+        assert pilots["launch_date"].is_between(pl.date(2022, 3, 31), pl.date(2022, 7, 31)).all()
+        assert division_month.filter(~pl.col("pilot"))["launch_date"].is_null().all()
+
+    def test_division_counts_non_negative(self, division_month):
+        assert (division_month["apprehensions"] >= 0).all()
 
     #### Consistency across tables ####
     def test_panel_years_match_apprehensions(self, apprehensions, neighbourhood_year):

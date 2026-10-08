@@ -59,6 +59,19 @@ class TestAnalysisData(TableChecks):
         # TSNS 2020 designates 33 Neighbourhood Improvement Areas on the 158 model.
         assert (neighbourhoods["tsns_designation"] == "Improvement Area").sum() == 33
 
+    def test_division_month_matches_apprehensions(self, apprehensions, division_month):
+        assert division_month["apprehensions"].sum() == apprehensions["police_division"].drop_nulls().len()
+
+    def test_census_group_shares_plausible(self, neighbourhoods):
+        # 2021 Census, Toronto: South Asian ~14%, East/Southeast Asian ~21%, Black ~10%.
+        weighted = {
+            c: (neighbourhoods[c] * neighbourhoods["population"]).sum() / neighbourhoods["population"].sum()
+            for c in ["south_asian_pct", "east_southeast_asian_pct", "black_pct"]
+        }
+        assert 11 < weighted["south_asian_pct"] < 17
+        assert 17 < weighted["east_southeast_asian_pct"] < 25
+        assert 7 < weighted["black_pct"] < 12
+
 
 class TestAnalysisArrests(ArrestChecks):
     data_dir = Path("data/02-analysis_data")

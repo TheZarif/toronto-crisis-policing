@@ -2,7 +2,8 @@
 # Purpose: Simulates the analysis tables produced by 03-clean_data.py so that
 #   tests and analysis code can be written before touching real data.
 #   Apprehension rates are simulated to rise with renter share and fall with
-#   income, and strip searches to be more likely for Black and Indigenous people
+#   income, apprehensions to fall by 15% in Crisis Service pilot divisions after
+#   launch, and strip searches to be more likely for Black and Indigenous people
 #   arrested: the relationships the analysis will test for.
 # Author: Zarif Masud
 # Date: 5 October 2026
@@ -36,6 +37,13 @@ TYPE_PROBS = [0.80, 0.08, 0.07, 0.04, 0.01]
 AGE_GROUPS = ["18 to 24", "25 to 34", "35 to 44", "45 to 54", "55 to 64", "65+"]
 PREMISES = ["Apartment", "House", "Outside", "Other", "Commercial", "Transit", "Educational"]
 DIVISIONS = [f"D{d}" for d in (11, 12, 13, 14, 22, 23, 31, 32, 33, 41, 42, 43, 51, 52, 53, 54, 55)]
+# Crisis Service pilot divisions and launch dates, as in the real data.
+PILOT_LAUNCH = {
+    "D51": date(2022, 3, 31), "D52": date(2022, 3, 31), "D41": date(2022, 4, 4), "D42": date(2022, 4, 4),
+    "D43": date(2022, 4, 4), "D14": date(2022, 7, 11), "D12": date(2022, 7, 18), "D23": date(2022, 7, 18),
+    "D31": date(2022, 7, 18),
+}
+PILOT_EFFECT = 0.85  # true rate ratio for pilot divisions after launch
 
 # Arrests: population benchmark (shares sum below 1; the rest have no police category)
 RACE_POPULATION = {
@@ -66,6 +74,9 @@ hood_ids = np.sort(rng.choice(np.arange(1, 175), N_NEIGHBOURHOODS, replace=False
 median_income = rng.lognormal(np.log(85_000), 0.25, N_NEIGHBOURHOODS).round(-2)
 renter_pct = np.clip(rng.normal(46, 16, N_NEIGHBOURHOODS), 5, 95)
 visible_minority_pct = np.clip(rng.normal(52, 22, N_NEIGHBOURHOODS), 5, 98)
+# Split the visible minority population across groups (the last share is groups
+# with no separate column, such as multiple visible minorities).
+group_split = rng.dirichlet([2, 3, 4, 1, 0.8, 0.6], N_NEIGHBOURHOODS) * visible_minority_pct[:, None]
 
 neighbourhoods = pl.DataFrame(
     {
@@ -78,7 +89,11 @@ neighbourhoods = pl.DataFrame(
         "median_household_income": median_income,
         "low_income_pct": np.clip(rng.normal(13, 4.5, N_NEIGHBOURHOODS), 3, 35),
         "visible_minority_pct": visible_minority_pct,
-        "black_pct": visible_minority_pct * rng.uniform(0.05, 0.35, N_NEIGHBOURHOODS),
+        "black_pct": group_split[:, 0],
+        "south_asian_pct": group_split[:, 1],
+        "east_southeast_asian_pct": group_split[:, 2],
+        "middle_eastern_pct": group_split[:, 3],
+        "latin_american_pct": group_split[:, 4],
         "indigenous_pct": rng.uniform(0.05, 3, N_NEIGHBOURHOODS),
         "renter_pct": renter_pct,
         # 13 neighbourhoods form the downtown core, as in the real data.
@@ -178,6 +193,26 @@ neighbourhood_year = (
 )
 
 
+#### Simulate division-month counts ####
+# Monthly apprehensions by police division: a division baseline, a citywide trend
+# with seasonality, negative binomial noise, and the pilot effect after launch.
+months = [date(y, m, 1) for y in YEARS for m in range(1, 13)]
+baseline = rng.lognormal(np.log(50), 0.3, len(DIVISIONS))
+division_rows = []
+for d, division in enumerate(DIVISIONS):
+    launch = PILOT_LAUNCH.get(division)
+    for t, month in enumerate(months):
+        expected = baseline[d] * (1 + 0.004 * t) * (1 + 0.08 * np.sin(2 * np.pi * month.month / 12))
+        if launch and month > launch:
+            expected *= PILOT_EFFECT
+        division_rows.append((division, month, rng.poisson(expected * rng.gamma(30, 1 / 30)), launch is not None, launch))
+division_month = pl.DataFrame(
+    division_rows,
+    schema={"police_division": pl.String, "month": pl.Date, "apprehensions": pl.Int32, "pilot": pl.Boolean, "launch_date": pl.Date},
+    orient="row",
+)
+
+
 #### Simulate arrests and strip searches ####
 N_ARRESTS = 60_000
 race = rng.choice(list(ARREST_RACE_PROBS), N_ARRESTS, p=list(ARREST_RACE_PROBS.values()))
@@ -223,6 +258,7 @@ population_by_race = pl.DataFrame(
 apprehensions.write_parquet(OUT_DIR / "apprehensions.parquet")
 neighbourhoods.write_parquet(OUT_DIR / "neighbourhoods.parquet")
 neighbourhood_year.write_parquet(OUT_DIR / "neighbourhood_year.parquet")
+division_month.write_parquet(OUT_DIR / "division_month.parquet")
 arrests.write_parquet(OUT_DIR / "arrests.parquet")
 population_by_race.write_parquet(OUT_DIR / "population_by_race.parquet")
 

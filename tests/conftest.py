@@ -29,6 +29,11 @@ def neighbourhood_year(request) -> pl.DataFrame:
 
 
 @pytest.fixture
+def division_month(request) -> pl.DataFrame:
+    return load(request.cls.data_dir, "division_month")
+
+
+@pytest.fixture
 def arrests(request) -> pl.DataFrame:
     return load(request.cls.data_dir, "arrests")
 

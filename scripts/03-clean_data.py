@@ -5,6 +5,8 @@
 #     and a downtown flag
 #   - neighbourhood_year.parquet: apprehension counts (all and Section 17) and
 #     rates per neighbourhood-year
+#   - division_month.parquet: apprehension counts per police division and month,
+#     flagged by Toronto Community Crisis Service pilot area and launch date
 #   - neighbourhood_boundaries.geojson: 158-model boundaries keyed by hood_id
 #   - arrests.parquet: one row per person arrested (or strip searched), 2020-2021
 #   - population_by_race.parquet: 2021 Toronto population in police race categories
@@ -26,6 +28,15 @@ OUT_DIR = Path("data/02-analysis_data")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 FIRST_YEAR = 2014
+
+# Toronto Community Crisis Service pilot regions by police division, with launch
+# dates (CAMH 2023, Table 1). The service went citywide on 26 September 2024.
+CRISIS_SERVICE_PILOTS = {
+    "D51": "2022-03-31", "D52": "2022-03-31",                    # Downtown East
+    "D41": "2022-04-04", "D42": "2022-04-04", "D43": "2022-04-04",  # Northeast
+    "D14": "2022-07-11",                                          # Downtown West
+    "D12": "2022-07-18", "D23": "2022-07-18", "D31": "2022-07-18",  # Northwest
+}
 
 # Downtown core, approximating the City's Downtown Plan area: neighbourhoods whose
 # centroid lies east of Bathurst Street, west of the Don River and south of Bloor Street.
@@ -201,6 +212,16 @@ census = pl.DataFrame(
         "_vm_total": profile_row(VISIBLE_MINORITY),
         "_vm": profile_row("Total visible minority population", VISIBLE_MINORITY),
         "_black": profile_row("Black", VISIBLE_MINORITY),
+        # Remaining census groups, combined to match the police perceived-race categories.
+        "_south_asian": profile_row("South Asian", VISIBLE_MINORITY),
+        "_chinese": profile_row("Chinese", VISIBLE_MINORITY),
+        "_filipino": profile_row("Filipino", VISIBLE_MINORITY),
+        "_southeast_asian": profile_row("Southeast Asian", VISIBLE_MINORITY),
+        "_korean": profile_row("Korean", VISIBLE_MINORITY),
+        "_japanese": profile_row("Japanese", VISIBLE_MINORITY),
+        "_arab": profile_row("Arab", VISIBLE_MINORITY),
+        "_west_asian": profile_row("West Asian", VISIBLE_MINORITY),
+        "_latin_american": profile_row("Latin American", VISIBLE_MINORITY),
         "_ind_total": profile_row(INDIGENOUS),
         "_ind": profile_row("Indigenous identity", INDIGENOUS),
         "_households": profile_row(TENURE),
@@ -217,6 +238,14 @@ neighbourhoods = (
         pl.col("tsns_designation").replace_strict(TSNS_DESIGNATIONS),
         (100 * pl.col("_vm") / pl.col("_vm_total")).alias("visible_minority_pct"),
         (100 * pl.col("_black") / pl.col("_vm_total")).alias("black_pct"),
+        (100 * pl.col("_south_asian") / pl.col("_vm_total")).alias("south_asian_pct"),
+        (
+            100
+            * (pl.col("_chinese") + pl.col("_filipino") + pl.col("_southeast_asian") + pl.col("_korean") + pl.col("_japanese"))
+            / pl.col("_vm_total")
+        ).alias("east_southeast_asian_pct"),
+        (100 * (pl.col("_arab") + pl.col("_west_asian")) / pl.col("_vm_total")).alias("middle_eastern_pct"),
+        (100 * pl.col("_latin_american") / pl.col("_vm_total")).alias("latin_american_pct"),
         (100 * pl.col("_ind") / pl.col("_ind_total")).alias("indigenous_pct"),
         (100 * pl.col("_renters") / pl.col("_households")).alias("renter_pct"),
     )
@@ -262,6 +291,34 @@ neighbourhoods = neighbourhoods.join(
     ),
     on="hood_id",
     how="left",
+)
+
+
+#### Build division-month panel ####
+# Apprehensions per police division and month, with zeros filled, for comparing
+# Crisis Service pilot divisions with the rest before and after launch.
+months = pl.date_range(
+    pl.date(FIRST_YEAR, 1, 1), pl.date(last_complete_year, 12, 1), interval="1mo", eager=True
+).alias("month")
+division_counts = (
+    apprehensions.drop_nulls("police_division")
+    .group_by("police_division", pl.col("occurrence_date").dt.truncate("1mo").alias("month"))
+    .agg(pl.len().cast(pl.Int32).alias("apprehensions"))
+)
+pilots = pl.DataFrame(
+    {"police_division": list(CRISIS_SERVICE_PILOTS), "launch_date": list(CRISIS_SERVICE_PILOTS.values())}
+).with_columns(pl.col("launch_date").str.to_date())
+division_month = (
+    apprehensions.select(pl.col("police_division").drop_nulls().unique())
+    .join(months.to_frame(), how="cross")
+    .join(division_counts, on=["police_division", "month"], how="left")
+    .join(pilots, on="police_division", how="left")
+    .with_columns(
+        pl.col("apprehensions").fill_null(0),
+        pl.col("launch_date").is_not_null().alias("pilot"),
+    )
+    .select("police_division", "month", "apprehensions", "pilot", "launch_date")
+    .sort("police_division", "month")
 )
 
 
@@ -342,6 +399,7 @@ population_by_race = (
 apprehensions.write_parquet(OUT_DIR / "apprehensions.parquet")
 neighbourhoods.write_parquet(OUT_DIR / "neighbourhoods.parquet")
 neighbourhood_year.write_parquet(OUT_DIR / "neighbourhood_year.parquet")
+division_month.write_parquet(OUT_DIR / "division_month.parquet")
 boundaries.to_file(OUT_DIR / "neighbourhood_boundaries.geojson", driver="GeoJSON")
 arrests.write_parquet(OUT_DIR / "arrests.parquet")
 population_by_race.write_parquet(OUT_DIR / "population_by_race.parquet")
