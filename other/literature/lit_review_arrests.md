@@ -18,6 +18,11 @@ Before official data existed, researchers relied on surveys.
 - Their own reports of being stopped and searched suggested that **this concern was justified**.
 - The study set the main hypothesis that later administrative data has tested: Black Torontonians experience more police contact than their share of the population would predict.
 
+Police stop data later confirmed the pattern and showed it has a geography.
+- **Meng (2017)** analysed Toronto Police stop data from 2003–2012. For **Black youth**, the number of stops rose **42.7%** and the ratio of stops to arrests rose **44.9%** over the decade. For White youth, both fell steadily.
+- Stops of Black youth were **most excessive in neighbourhoods with more White residents and/or higher crime rates**. The disparity depends on where people are, not only on who they are.
+- Meng argued that police stops should be studied in their neighbourhood context. Our arrests data can't do this, since 45% of arrests lack a location. That makes the neighbourhood-level apprehensions analysis a useful complement.
+
 The Ontario Human Rights Commission's inquiry into the Toronto Police Service tested that hypothesis with police records.
 - In **A Disparate Impact (OHRC, 2020)**, Wortley and colleagues analysed 2013–2017 charge, arrest and use-of-force data. Black people were **8.8% of Toronto's population but 32.4% of people charged**, making them 3.9 times more likely than White people to appear in the charge data.
 - The over-representation was **largest for low-level, discretionary charges**: Black people made up 42.5% of those charged with obstructing justice.
@@ -81,6 +86,7 @@ Our dataset records whether the officer saw "mental instability or possibly suic
 - Office of the Independent Police Review Director. (2019). *Breaking the golden rule: A review of police strip searches in Ontario*. Toronto: OIPRD.
 - Ontario Human Rights Commission. (2020). *A disparate impact: Second interim report on the inquiry into racial profiling and racial discrimination of Black persons by the Toronto Police Service*. https://www.ohrc.on.ca/en/disparate-impact-second-interim-report-inquiry-racial-profiling-and-racial-discrimination-black
 - Pierson, E., Simoiu, C., Overgoor, J., Corbett-Davies, S., Jenson, D., Shoemaker, A., Ramachandran, V., Barghouty, P., Phillips, C., Shroff, R., & Goel, S. (2020). A large-scale analysis of racial disparities in police stops across the United States. *Nature Human Behaviour, 4*, 736–745. https://doi.org/10.1038/s41562-020-0858-1
+- Meng, Y. (2017). Profiling minorities: Police stop and search practices in Toronto, Canada. *Human Geographies, 11*(1), 5–23. https://doi.org/10.5719/hgeo.2017.111.1
 - *R v Golden*, 2001 SCC 83, [2001] 3 SCR 679.
 - Simoiu, C., Corbett-Davies, S., & Goel, S. (2017). The problem of infra-marginality in outcome tests for discrimination. *The Annals of Applied Statistics, 11*(3), 1193–1216.
 - Toronto Police Service. (2022). *Race & identity based data collection strategy: Understanding use of force & strip searches in 2020 — Detailed report*. https://www.tps.ca/race-identity-based-data-collection/
