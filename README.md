@@ -1,16 +1,16 @@
 # Crisis Policing in Toronto's Neighbourhoods
 
-Code, data and paper for *Crisis Policing in Toronto's Neighbourhoods: Mental Health Act apprehensions are more frequent where more households rent and more Indigenous people live, 2014–2025* (Masud, 2026).
+Code, data and paper for *Crisis Policing in Toronto's Neighbourhoods: Mental Health Act apprehensions are more frequent where more Indigenous and low-income residents live, and did not fall where a non-police crisis service was piloted, 2014–2025* (Masud, 2026).
 
 **Paper:** [`paper/paper.pdf`](paper/paper.pdf)
 
 ## Summary
 
-Toronto police detained people under Ontario's *Mental Health Act* about 11,000 times a year between 2014 and 2025, four times in five on an officer's own judgement. We link 131,325 apprehensions to 2021 Census profiles of the city's 158 neighbourhoods and add the Toronto Police Service's race-based data on 65,276 arrests in 2020–2021.
+Toronto police detained people under Ontario's *Mental Health Act* about 11,000 times a year between 2014 and 2025, four times in five on an officer's own judgement. The paper asks three questions:
 
-- Apprehension rates are about 16% higher per standard-deviation increase in the share of households that rent, and about 21% higher per standard-deviation increase in the Indigenous share of residents. Both associations hold outside the downtown core.
-- Neighbourhood low income matters only through the downtown core; Black population share and the City's Neighbourhood Improvement Area designation add little.
-- Black and Indigenous people were arrested at about three times the White rate relative to population. A mental-instability flag at arrest raised the probability of a strip search for every group, most of all for Black people.
+1. **Which neighbourhood characteristics go with higher apprehension rates?** We link 131,325 apprehensions to 2021 Census profiles of the city's 158 neighbourhoods. Rates are about 12% higher per standard-deviation increase in the Indigenous share of residents, inside and outside the downtown core, and higher where more residents have low incomes (mostly downtown) or rent. They are somewhat lower where more South Asian, East/Southeast Asian or Middle-Eastern people live; Black share has no clear association.
+2. **Did apprehensions fall where the Toronto Community Crisis Service was piloted?** Comparing the nine pilot police divisions with the other eight from 2017 to August 2024, no: rate ratio 1.04 (95% CI 0.81–1.33), with flat trends before and after launch.
+3. **How do arrests and strip searches differ by perceived race, and does a mental-health flag change that?** Using race-based data on 65,276 arrests in 2020–2021, Black and Indigenous people were arrested at about three times the White rate and South Asian and East/Southeast Asian people at about half. A mental-instability flag raised the probability of a strip search for most groups until the October 2020 procedure change made strip searches rare.
 
 ## Repository layout
 
@@ -68,6 +68,8 @@ The Open Data Toronto copy of the arrests dataset is truncated at 32,000 rows, s
 - **Repeated incidents:** `event_id` identifies an incident, not a person. In the raw file, 298 incidents have two or three rows and 115 rows are identical on every field. All rows are kept, because the source defines each row as a separate apprehension and there is no person identifier to deduplicate on (under 0.1% of rows).
 - **Census measures:** 2021 Census long-form (25% sample). Population is the age-group total; visible minority, Black and Indigenous shares use the private-household population as denominator, and renter share uses private households.
 - **Arrest labels:** the 2020 and 2021 label schemes are harmonized (offence categories into 12 groups, age groups, youth status). A strip search implies the person was booked, following the source documentation.
+- **Neighbourhood race and ethnicity shares:** Black, South Asian, East/Southeast Asian (Chinese, Filipino, Southeast Asian, Korean, Japanese), Middle-Eastern (Arab, West Asian) and Latin American shares of the private-household population, matching the police perceived-race categories. All are screened (`outputs/model/predictor_screening.csv`) and all enter the count model.
+- **Crisis Service pilots:** pilot police divisions and launch dates follow the 2023 evaluation report (Downtown East D51–52, 31 March 2022; Northeast D41–43, 4 April 2022; Downtown West D14, 11 July 2022; Northwest D12, D23, D31, 18 July 2022). The comparison window ends in August 2024, before the citywide launch on 26 September 2024.
 - **Race benchmark:** census groups are combined to match the police categories. East/Southeast Asian is Chinese, Filipino, Southeast Asian, Korean and Japanese; Middle-Eastern is Arab and West Asian; White is residents who are neither a visible minority nor Indigenous. The benchmark covers 96% of residents.
 
 ## Citation
