@@ -76,9 +76,37 @@ From `outputs/eda/arrests/` (write-up: `eda_arrests.md`):
 - **Youth suppressed:** people 17 and under are removed at source, so results cover adults only.
 - **Repeat individuals:** one person can appear multiple times; counts are apprehensions, not people.
 
-## Next steps
+## Plan to finish
 
-1. Negative binomial model of counts with a population offset; decide how to handle the downtown core.
-   - Consider Section 17 (officer-initiated) apprehensions as the main or secondary outcome.
-   - Optional causal extension: difference-in-differences on Community Crisis Service pilot areas vs the rest, before and after March 2022 (needs pilot boundaries).
-2. Replace starter README, `.Rproj`, paper template and leftover R scripts.
+Base spec: [Telling Stories with Data, Paper One](https://tellingstorieswithdata.com/25-papers.html#sec-paper-one), adapted for PhD flexibility.
+
+**Decisions (7 Oct 2026):**
+- **Python stays.** Cite Python and every package in place of R, and note the substitution in the README.
+- **Scope:** a Paper One data paper plus one light model, about 6–10 pages.
+- **Lead dataset:** apprehensions (option A), with arrests and strip searches as a short individual-level section.
+- **Title page:** author Zarif Masud; date set at render time; no fixed deadline.
+
+**Paper outline (`paper/paper.qmd`, Python/Jupyter engine, renders to PDF):**
+1. Title, author, date, abstract (3–4 sentences), repo link in a footnote.
+2. **Introduction:** 3–4 paragraphs (estimand, findings, why it matters), plus a roadmap paragraph.
+3. **Data:**
+   - sources and context
+   - **measurement**: how an event becomes a row (MHA sections, officer discretion, NSA coding, youth suppression, officer-perceived race)
+   - cleaning decisions
+   - a summary table
+   - figures of the actual observations: monthly trend, neighbourhood map, 158-neighbourhood scatter, apprehension types
+   - a short subsection on race-based arrests (arrest rates by race, the mental-instability flag)
+   - ethics
+4. **Model:** negative binomial regression on neighbourhood-year counts with a log-population offset. Predictors: renter share, low-income share, Indigenous share, Black share, NIA status, year effects. Fit on simulated data first to check that it recovers the known effects. Covers RQ1, plus RQ2 by fitting Section 17 and other types separately.
+5. **Results:** incidence-rate-ratio table and figure, plus the downtown sensitivity check.
+6. **Discussion:** findings, the ecological fallacy, the residents-vs-visitors denominator problem, the Community Crisis Service (descriptive only), weaknesses, next steps.
+7. **Appendix:** cleaning details, model diagnostics, strip-search logistic model (RQ5), staged disparity table (RQ4).
+
+**Phases:**
+1. **Clean up:** delete leftover R scripts, `.Rproj`, `first_model.rds`, the template paper and starter sketches; replace `other/llm_usage/usage.txt`.
+2. **Model:** `scripts/06-model_data.py` saves fitted models and tidy results to `models/` and `outputs/model/`; tests on model inputs.
+3. **References:** `paper/references.bib` with the literature, datasets, Python, packages, Quarto and the textbook.
+4. **Write `paper.qmd`:** figures with plotnine and tables with great_tables, generated in hidden code chunks from saved data.
+5. **Sketches:** hand-drawn dataset and graph sketches (Zarif) filed in `other/sketches/`.
+6. **Checks:** banned-words script, clean PDF render, cross-references, captions, typo pass.
+7. **Wrap up:** update README and STATUS, commit, push.
