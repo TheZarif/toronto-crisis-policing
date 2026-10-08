@@ -1,79 +1,384 @@
+%% ===================================================================
+%% Data sources
+%% ===================================================================
 
-
-@Manual{citeR,
-    title = {{R: A Language and Environment for Statistical Computing}},
-    author = {{R Core Team}},
-    organization = {R Foundation for Statistical Computing},
-    address = {Vienna, Austria},
-    year = {2023},
-    url = {https://www.R-project.org/},
-  }
-  
-  
-@Article{thereferencecanbewhatever,
-    title = {Welcome to the {tidyverse}},
-    author = {Hadley Wickham and Mara Averick and Jennifer Bryan and Winston Chang and Lucy D'Agostino McGowan and Romain François and Garrett Grolemund and Alex Hayes and Lionel Henry and Jim Hester and Max Kuhn and Thomas Lin Pedersen and Evan Miller and Stephan Milton Bache and Kirill Müller and Jeroen Ooms and David Robinson and Dana Paige Seidel and Vitalie Spinu and Kohske Takahashi and Davis Vaughan and Claus Wilke and Kara Woo and Hiroaki Yutani},
-    year = {2019},
-    journal = {Journal of Open Source Software},
-    volume = {4},
-    number = {43},
-    pages = {1686},
-    doi = {10.21105/joss.01686},
-  }  
-  
-  
-@Manual{citeLahman,
-    title = {{Lahman: Sean `Lahman' Baseball Database}},
-    author = {Michael Friendly and Chris Dalzell and Martin Monkman and Dennis Murphy},
-    year = {2020},
-    note = {R package version 8.0-0},
-    url = {https://CRAN.R-project.org/package=Lahman},
-  }  
-  
-  
-@article{gebru2021datasheets,
-  title={Datasheets for datasets},
-  author={Gebru, Timnit and Morgenstern, Jamie and Vecchione, Briana and Vaughan, Jennifer Wortman and Wallach, Hanna and Iii, Hal Daum{\'e} and Crawford, Kate},
-  journal={Communications of the ACM},
-  volume={64},
-  number={12},
-  pages={86--92},
-  year={2021},
-  publisher={ACM New York, NY, USA}
+@Manual{tps_mha,
+  title = {Mental Health Act Apprehensions},
+  author = {{Toronto Police Service}},
+  year = {2026},
+  note = {Open Data Toronto. Accessed 5 October 2026.},
+  url = {https://open.toronto.ca/dataset/mental-health-apprehensions/},
 }
 
-@Misc{rstanarm,
-    title = {{rstanarm: {Bayesian} applied regression modeling via {Stan}}},
-    author = {Ben Goodrich and Jonah Gabry and Imad Ali and Sam Brilleman},
-    note = {R package version 2.21.3},
-    year = {2022},
-    url = {https://mc-stan.org/rstanarm/},
-  }
-  
-@Manual{palmerpenguins,
-    title = {{palmerpenguins: Palmer Archipelago (Antarctica) penguin data}},
-    author = {Allison Marie Horst and Alison Presmanes Hill and Kristen B Gorman},
-    year = {2020},
-    note = {R package version 0.1.0},
-    doi = {10.5281/zenodo.3960218},
-    url = {https://allisonhorst.github.io/palmerpenguins/},
-  }
-  
-  
-@book{tellingstories,
-    title = {Telling Stories with Data},
-    author = {Rohan Alexander},
-    year = {2023},
-    publisher = {Chapman; Hall/CRC},
-    url = {https://tellingstorieswithdata.com/}
-  }  
-  
-  
+@Manual{toronto_neighbourhoods,
+  title = {Neighbourhoods},
+  author = {{City of Toronto}},
+  year = {2026},
+  note = {Open Data Toronto. 158-neighbourhood model. Accessed 5 October 2026.},
+  url = {https://open.toronto.ca/dataset/neighbourhoods/},
+}
 
-@Manual{shelter,
-    title = {Deaths of Shelter Residents},
-    author = {{Toronto Shelter & Support Services}},
-    year = {2024},
-    note = {As accessed 2024-10-02.},
-    url = {https://open.toronto.ca/dataset/deaths-of-shelter-residents/},
-  }  
+@Manual{toronto_profiles,
+  title = {Neighbourhood Profiles},
+  author = {{City of Toronto}},
+  year = {2026},
+  note = {Open Data Toronto. 2021 Census of Population, 158-neighbourhood model. Accessed 5 October 2026.},
+  url = {https://open.toronto.ca/dataset/neighbourhood-profiles/},
+}
+
+@Manual{tps_rbdc_arrests,
+  title = {Race \& Identity Based Data Collection: Arrests and Strip Searches},
+  author = {{Toronto Police Service}},
+  year = {2026},
+  note = {Toronto Police Service ArcGIS layer RBDC\_ARR\_TBL\_001. Accessed 6 October 2026.},
+  url = {https://services.arcgis.com/S9th0jAJ7bqgIRjw/ArcGIS/rest/services/RBDC_ARR_TBL_001/FeatureServer},
+}
+
+@Manual{opendatatoronto,
+  title = {Open Data Toronto},
+  author = {{City of Toronto}},
+  year = {2026},
+  url = {https://open.toronto.ca/},
+}
+
+%% ===================================================================
+%% Literature: police, mental health and neighbourhoods
+%% ===================================================================
+
+@Article{anderson2014,
+  title = {A meta-analysis of ethnic differences in pathways to care at the first episode of psychosis},
+  author = {Anderson, Kelly K. and Flora, Nina and Archie, Suzanne and Morgan, Craig and McKenzie, Kwame},
+  journal = {Acta Psychiatrica Scandinavica},
+  year = {2014},
+  volume = {130},
+  pages = {257--268},
+  doi = {10.1111/acps.12254},
+}
+
+@Article{andresen2011,
+  title = {The ambient population and crime analysis},
+  author = {Andresen, Martin A.},
+  journal = {The Professional Geographer},
+  year = {2011},
+  volume = {63},
+  number = {2},
+  pages = {193--212},
+}
+
+@Article{boyce2015,
+  title = {Mental health and contact with police in {Canada}, 2012},
+  author = {Boyce, Jillian and Rotenberg, Cristine and Karam, Maisie},
+  journal = {Juristat},
+  year = {2015},
+  note = {Statistics Canada Catalogue no. 85-002-X},
+  url = {https://www150.statcan.gc.ca/n1/pub/85-002-x/2015001/article/14176-eng.htm},
+}
+
+@Article{deepyne2022,
+  title = {A community response approach to mental health and substance abuse crises reduced crime},
+  author = {Dee, Thomas S. and Pyne, Jaymes},
+  journal = {Science Advances},
+  year = {2022},
+  volume = {8},
+  number = {23},
+  pages = {eabm2106},
+  doi = {10.1126/sciadv.abm2106},
+}
+
+@Report{iacobucci2014,
+  title = {Police Encounters with People in Crisis: An Independent Review Conducted by the Honourable Frank Iacobucci for Chief of Police William Blair, Toronto Police Service},
+  author = {Iacobucci, Frank},
+  institution = {Toronto Police Service},
+  year = {2014},
+  type = {Independent review},
+}
+
+@Article{kouyoumdjian2019,
+  title = {Interactions between police and persons who experience homelessness and mental illness in {Toronto, Canada}: Findings from a prospective study},
+  author = {Kouyoumdjian, Fiona G. and Wang, Ri and Mejia-Lancheros, Cilia and Owusu-Bempah, Akwasi and Nisenbaum, Rosane and O'Campo, Patricia and Stergiopoulos, Vicky and Hwang, Stephen W.},
+  journal = {The Canadian Journal of Psychiatry},
+  year = {2019},
+  volume = {64},
+  number = {10},
+  pages = {718--725},
+  doi = {10.1177/0706743719861386},
+}
+
+@Article{lebenbaum2018,
+  title = {Prevalence and predictors of involuntary psychiatric hospital admissions in {Ontario, Canada}: A population-based linked administrative database study},
+  author = {Lebenbaum, Michael and Chiu, Maria and Vigod, Simone and Kurdyak, Paul},
+  journal = {BJPsych Open},
+  year = {2018},
+  volume = {4},
+  number = {2},
+  pages = {31--38},
+}
+
+@Article{livingston2016,
+  title = {Contact between police and people with mental disorders: A review of rates},
+  author = {Livingston, James D.},
+  journal = {Psychiatric Services},
+  year = {2016},
+  volume = {67},
+  number = {8},
+  pages = {850--857},
+  doi = {10.1176/appi.ps.201500312},
+}
+
+@Article{morabito2007,
+  title = {Horizons of context: Understanding the police decision to arrest people with mental illness},
+  author = {Morabito, Melissa Schaefer},
+  journal = {Psychiatric Services},
+  year = {2007},
+  volume = {58},
+  number = {12},
+  pages = {1582--1587},
+  doi = {10.1176/ps.2007.58.12.1582},
+}
+
+@Article{weich2017,
+  title = {Variation in compulsory psychiatric inpatient admission in {England}: A cross-classified, multilevel analysis},
+  author = {Weich, Scott and McBride, Orla and Twigg, Liz and others},
+  journal = {The Lancet Psychiatry},
+  year = {2017},
+  volume = {4},
+  number = {8},
+  pages = {619--626},
+}
+
+%% ===================================================================
+%% Literature: race, arrests and strip searches
+%% ===================================================================
+
+@Article{kesic2013,
+  title = {Use of nonfatal force on and by persons with apparent mental disorder in encounters with police},
+  author = {Kesic, Dragana and Thomas, Stuart D. M. and Ogloff, James R. P.},
+  journal = {Criminal Justice and Behavior},
+  year = {2013},
+  volume = {40},
+  number = {3},
+  pages = {321--337},
+}
+
+@Article{knowles2001,
+  title = {Racial bias in motor vehicle searches: Theory and evidence},
+  author = {Knowles, John and Persico, Nicola and Todd, Petra},
+  journal = {Journal of Political Economy},
+  year = {2001},
+  volume = {109},
+  number = {1},
+  pages = {203--229},
+  doi = {10.1086/318603},
+}
+
+@Article{meng2017,
+  title = {Profiling minorities: Police stop and search practices in {Toronto, Canada}},
+  author = {Meng, Yunliang},
+  journal = {Human Geographies},
+  year = {2017},
+  volume = {11},
+  number = {1},
+  pages = {5--23},
+  doi = {10.5719/hgeo.2017.111.1},
+}
+
+@Report{oiprd2019,
+  title = {Breaking the Golden Rule: A Review of Police Strip Searches in {Ontario}},
+  author = {{Office of the Independent Police Review Director}},
+  institution = {Office of the Independent Police Review Director},
+  address = {Toronto},
+  year = {2019},
+}
+
+@Report{ohrc2020,
+  title = {A Disparate Impact: Second Interim Report on the Inquiry into Racial Profiling and Racial Discrimination of {Black} Persons by the {Toronto Police Service}},
+  author = {{Ontario Human Rights Commission}},
+  institution = {Ontario Human Rights Commission},
+  year = {2020},
+  url = {https://www.ohrc.on.ca/en/disparate-impact-second-interim-report-inquiry-racial-profiling-and-racial-discrimination-black},
+}
+
+@Article{pierson2020,
+  title = {A large-scale analysis of racial disparities in police stops across the {United States}},
+  author = {Pierson, Emma and Simoiu, Camelia and Overgoor, Jan and Corbett-Davies, Sam and Jenson, Daniel and Shoemaker, Amy and Ramachandran, Vignesh and Barghouty, Phoebe and Phillips, Cheryl and Shroff, Ravi and Goel, Sharad},
+  journal = {Nature Human Behaviour},
+  year = {2020},
+  volume = {4},
+  pages = {736--745},
+  doi = {10.1038/s41562-020-0858-1},
+}
+
+@Misc{golden2001,
+  title = {{R v Golden}, 2001 {SCC} 83, [2001] 3 {SCR} 679},
+  author = {{Supreme Court of Canada}},
+  year = {2001},
+  url = {https://www.canlii.org/en/ca/scc/doc/2001/2001scc83/2001scc83.html},
+}
+
+@Article{simoiu2017,
+  title = {The problem of infra-marginality in outcome tests for discrimination},
+  author = {Simoiu, Camelia and Corbett-Davies, Sam and Goel, Sharad},
+  journal = {The Annals of Applied Statistics},
+  year = {2017},
+  volume = {11},
+  number = {3},
+  pages = {1193--1216},
+}
+
+@Report{tps2022,
+  title = {Race \& Identity Based Data Collection Strategy: Understanding Use of Force \& Strip Searches in 2020, Detailed Report},
+  author = {{Toronto Police Service}},
+  institution = {Toronto Police Service},
+  year = {2022},
+  url = {https://www.tps.ca/race-identity-based-data-collection/},
+}
+
+@Article{wortley2011,
+  title = {The usual suspects: Police stop and search practices in {Canada}},
+  author = {Wortley, Scot and Owusu-Bempah, Akwasi},
+  journal = {Policing and Society},
+  year = {2011},
+  volume = {21},
+  pages = {395--407},
+  doi = {10.1080/10439463.2011.610198},
+}
+
+%% ===================================================================
+%% Policy, legislation and context
+%% ===================================================================
+
+@Misc{mha1990,
+  title = {Mental Health Act, {R.S.O.} 1990, c. {M.7}},
+  author = {{Government of Ontario}},
+  year = {1990},
+  url = {https://www.ontario.ca/laws/statute/90m07},
+}
+
+@Report{tccs2023,
+  title = {Toronto Community Crisis Service: One-Year Outcome Evaluation Report},
+  author = {{City of Toronto}},
+  institution = {City of Toronto},
+  year = {2023},
+  url = {https://www.toronto.ca/wp-content/uploads/2023/10/97b8-Toronto-Community-Crisis-Service-1-Year-Outcome-Evaluation-Report.pdf},
+}
+
+@Report{tccs2026,
+  title = {Advancing the {Toronto Community Crisis Service}},
+  author = {{City of Toronto}},
+  institution = {City of Toronto},
+  type = {Report for action},
+  year = {2026},
+  url = {https://www.toronto.ca/legdocs/mmis/2026/ex/bgrd/backgroundfile-289503.pdf},
+}
+
+@Report{tsns2020,
+  title = {{TSNS} 2020 Neighbourhood Equity Index: Methodological Documentation},
+  author = {{City of Toronto}},
+  institution = {City of Toronto},
+  year = {2014},
+  url = {https://www.toronto.ca/wp-content/uploads/2017/11/97eb-TSNS-2020-NEI-equity-index-methodology-research-report-backgroundfile-67350.pdf},
+}
+
+@Book{tellingstories,
+  title = {Telling Stories with Data},
+  author = {Alexander, Rohan},
+  year = {2023},
+  publisher = {{Chapman and Hall/CRC}},
+  url = {https://tellingstorieswithdata.com/},
+}
+
+%% ===================================================================
+%% Software
+%% ===================================================================
+
+@Manual{python,
+  title = {Python: A Programming Language},
+  author = {{Python Software Foundation}},
+  year = {2025},
+  note = {Version 3.12},
+  url = {https://www.python.org/},
+}
+
+@Article{numpy,
+  title = {Array programming with {NumPy}},
+  author = {Harris, Charles R. and Millman, K. Jarrod and van der Walt, St{\'e}fan J. and others},
+  journal = {Nature},
+  year = {2020},
+  volume = {585},
+  pages = {357--362},
+  doi = {10.1038/s41586-020-2649-2},
+}
+
+@InProceedings{pandas,
+  title = {Data structures for statistical computing in {Python}},
+  author = {McKinney, Wes},
+  booktitle = {Proceedings of the 9th Python in Science Conference},
+  year = {2010},
+  pages = {56--61},
+  doi = {10.25080/Majora-92bf1922-00a},
+}
+
+@Manual{polars,
+  title = {Polars: Blazingly Fast {DataFrames} in {Rust}, {Python}, {Node.js}, {R} and {SQL}},
+  author = {Vink, Ritchie and others},
+  year = {2026},
+  note = {Python package version 1.44},
+  url = {https://pola.rs/},
+}
+
+@Manual{geopandas,
+  title = {{GeoPandas}: Python Tools for Geographic Data},
+  author = {Jordahl, Kelsey and others},
+  year = {2026},
+  note = {Python package version 1.2},
+  url = {https://geopandas.org/},
+}
+
+@Manual{shapely,
+  title = {Shapely: Manipulation and Analysis of Geometric Objects},
+  author = {Gillies, Sean and others},
+  year = {2025},
+  note = {Python package version 2.1},
+  url = {https://shapely.readthedocs.io/},
+}
+
+@Manual{plotnine,
+  title = {plotnine: A Grammar of Graphics for {Python}},
+  author = {Kibirige, Hassan and others},
+  year = {2026},
+  note = {Python package version 0.15},
+  url = {https://plotnine.org/},
+}
+
+@InProceedings{statsmodels,
+  title = {statsmodels: Econometric and statistical modeling with {Python}},
+  author = {Seabold, Skipper and Perktold, Josef},
+  booktitle = {Proceedings of the 9th Python in Science Conference},
+  year = {2010},
+  pages = {92--96},
+  doi = {10.25080/Majora-92bf1922-011},
+}
+
+@Manual{great_tables,
+  title = {Great Tables: Make Awesome Display Tables using {Python}},
+  author = {Iannone, Richard and Chow, Michael},
+  year = {2026},
+  note = {Python package version 1.0},
+  url = {https://posit-dev.github.io/great-tables/},
+}
+
+@Manual{pytest,
+  title = {pytest},
+  author = {Krekel, Holger and others},
+  year = {2026},
+  note = {Python package version 9.1},
+  url = {https://pytest.org/},
+}
+
+@Manual{quarto,
+  title = {Quarto},
+  author = {Allaire, J. J. and Teague, Charles and Scheidegger, Carlos and Xie, Yihui and Dervieux, Christophe},
+  year = {2022},
+  doi = {10.5281/zenodo.5960048},
+  url = {https://quarto.org/},
+}

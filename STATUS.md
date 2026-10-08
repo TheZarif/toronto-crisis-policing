@@ -13,15 +13,15 @@ _Last updated: 5 October 2026_
 | Test analysis data | `tests/test_analysis_data.py` | Done |
 | Exploratory analysis (apprehensions) | `scripts/05a-exploratory_data_analysis_apprehensions.py` → `outputs/eda/apprehensions/` | Done |
 | Exploratory analysis (arrests) | `scripts/05b-exploratory_data_analysis_arrests.py` → `outputs/eda/arrests/` | Done |
-| Model | `scripts/06-model_data.py` | To do |
+| Model | `scripts/06-model_data.py` → `models/`, `outputs/model/` | Done |
 | Draft notes | `outputs/paper_draft.md` (overview) + `outputs/eda/*/eda_*.md` (per-dataset EDA write-ups) | Done |
 | Literature review | `other/literature/lit_review_apprehensions.md`, `lit_review_arrests.md` (10 and 11 verified sources) | Done |
 | Research questions | `outputs/paper_draft.md` §6 (RQ1–RQ5; scope options A apprehensions-led, B arrests-led, C arrests only) | Proposed, awaiting decision |
 | Paper | `paper/paper.qmd` | To do (still starter template) |
 
-Run tests with `python -m pytest` (88 tests; shared checks in `tests/table_checks.py` run against both datasets).
+Run tests with `python -m pytest` (97 tests; shared checks in `tests/table_checks.py` run against both datasets).
 
-Remaining starter leftovers to remove or replace: `scripts/06`–`07` (R), `models/first_model.rds`, `starter_folder.Rproj`, `paper/` template content.
+Starter leftovers removed; `paper/paper.qmd` is still the template until phase 4.
 
 ## Data outputs
 
@@ -76,6 +76,16 @@ From `outputs/eda/arrests/` (write-up: `eda_arrests.md`):
 - **Youth suppressed:** people 17 and under are removed at source, so results cover adults only.
 - **Repeat individuals:** one person can appear multiple times; counts are apprehensions, not people.
 
+### Model results (`outputs/model/`)
+
+- **Count models** (negative binomial, rate ratio per 1 SD, 95% CI, SEs clustered by neighbourhood):
+  - renter share 1.16 (1.05–1.28); Indigenous share 1.21 (1.13–1.28); low-income share 1.12 (1.01–1.25)
+  - Black share 1.02 (n.s.); Improvement Area 0.93 (n.s.)
+- **Without the downtown core:** renter and Indigenous effects hold (1.17, 1.17); the low-income effect disappears (0.99).
+- **RQ2:** Section 17 is *not* more tied to disadvantage than other types. Other types track low income (1.23) and Indigenous share (1.33) more strongly.
+- **Strip search logit** (booked, Jan–Sep 2020): the mental-instability flag OR is 2.74 for White people; the Black × flag interaction OR is 1.75 (1.11–2.74, p = 0.015). Predicted search probability when flagged: Black 79%, White 71%; unflagged 49% vs 51%.
+- **Simulation check:** the model recovers the simulated renter (0.015) and log-income (−0.6) effects and overdispersion (0.2), tested in `tests/test_model.py`.
+
 ## Plan to finish
 
 Base spec: [Telling Stories with Data, Paper One](https://tellingstorieswithdata.com/25-papers.html#sec-paper-one), adapted for PhD flexibility.
@@ -102,7 +112,7 @@ Base spec: [Telling Stories with Data, Paper One](https://tellingstorieswithdata
 6. **Discussion:** findings, the ecological fallacy, the residents-vs-visitors denominator problem, the Community Crisis Service (descriptive only), weaknesses, next steps.
 7. **Appendix:** cleaning details, model diagnostics, strip-search logistic model (RQ5), staged disparity table (RQ4).
 
-**Phases:**
+**Phases:** (1–3 done on 7 Oct 2026)
 1. **Clean up:** delete leftover R scripts, `.Rproj`, `first_model.rds`, the template paper and starter sketches; replace `other/llm_usage/usage.txt`.
 2. **Model:** `scripts/06-model_data.py` saves fitted models and tidy results to `models/` and `outputs/model/`; tests on model inputs.
 3. **References:** `paper/references.bib` with the literature, datasets, Python, packages, Quarto and the textbook.

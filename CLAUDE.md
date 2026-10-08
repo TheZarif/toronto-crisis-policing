@@ -17,16 +17,17 @@ Never edit `data/01-raw_data/`; regenerate it via the download script.
 - uv must target the conda env (`--active` ignores conda): `export UV_PROJECT_ENVIRONMENT="$CONDA_PREFIX"` after activating.
 - Setup: `conda env create -f environment.yml && conda activate toronto-crisis-policing && UV_PROJECT_ENVIRONMENT="$CONDA_PREFIX" uv sync --inexact`.
 - Add deps with `uv add --no-sync <pkg> && uv sync --inexact` (dev: `--dev`); never `pip install` or `conda install` Python packages. Run scripts with plain `python scripts/<file>.py` in the activated env.
-- `polars` for data wrangling, `geopandas` for spatial work, `plotnine` (ggplot grammar) for all figures, `statsmodels` for models, `pytest` for data tests.
+- `polars` for data wrangling, `geopandas` for spatial work, `plotnine` (ggplot grammar) for all figures, `statsmodels` for models, `great_tables` for paper tables, `pytest` for tests.
 - Report in Quarto (`paper/paper.qmd`, Python/Jupyter engine), rendered to PDF.
 
 ## Layout
-- `scripts/` — numbered pipeline: simulate → download → clean → EDA → model (data tests live in `tests/`). Each script runs standalone from repo root.
+- `scripts/` — numbered pipeline: simulate → download → clean → EDA (05a/05b) → model (06); tests live in `tests/`. Each script runs standalone from repo root.
 - `data/` — `00-simulated_data`, `01-raw_data`, `02-analysis_data` (parquet preferred).
 - `tests/` — pytest data tests; `table_checks.py` holds checks shared by simulated and analysis data. Run `python -m pytest`.
 - `outputs/eda/<dataset>/` — one folder per dataset (`apprehensions` from `05a`, `arrests` from `05b`) holding figures, CSV tables and an `eda_<dataset>.md` write-up. Shared plot theme in `scripts/figure_style.py`.
 - `outputs/paper_draft.md` — project overview linking the per-dataset EDA write-ups.
-- `models/`, `paper/`, `other/` (sketches, datasheet, LLM usage log; `other/literature/` holds one literature review per dataset).
+- `models/` (pickled statsmodels fits) and `outputs/model/` (tidy CSV results the paper reads), from `06-model_data.py`.
+- `paper/`, `other/` (sketches, datasheet, LLM usage log; `other/literature/` holds one literature review per dataset).
 
 ## Status
 Progress, decisions and open issues live in `STATUS.md`; update it whenever a pipeline step or decision changes.

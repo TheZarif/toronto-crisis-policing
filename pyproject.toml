@@ -18,6 +18,7 @@ dependencies = [
     "jupyter",
     "ipykernel",
     "fastexcel>=0.21.0",
+    "great-tables>=1.0.0",
 ]
 
 [dependency-groups]

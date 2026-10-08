@@ -28,9 +28,10 @@ python scripts/03-clean_data.py
 python -m pytest
 python scripts/05a-exploratory_data_analysis_apprehensions.py
 python scripts/05b-exploratory_data_analysis_arrests.py
+python scripts/06-model_data.py
 ```
 
-Run everything from the repository root.
+Run everything from the repository root. The project uses Python in place of R; Python and every package are cited in `paper/references.bib`.
 
 ## Structure
 
@@ -38,7 +39,8 @@ Built on Rohan Alexander's [starter folder](https://github.com/RohanAlexander/st
 
 - `data/`: simulated (`00`), raw (`01`) and cleaned analysis (`02`) data.
 - `scripts/`: numbered pipeline (simulate, download, clean, explore, model).
-- `tests/`: pytest data tests, run against both the simulated and cleaned data.
+- `tests/`: pytest data tests, run against both the simulated and cleaned data. `tests/test_model.py` checks that the model recovers the effects built into the simulation.
+- `models/` and `outputs/model/`: fitted models and their tidy results.
 - `outputs/eda/`: figures, tables and a write-up for each dataset. [`outputs/paper_draft.md`](outputs/paper_draft.md) summarizes findings and the proposed research questions.
 - `other/literature/`: literature reviews for each dataset.
 - `paper/`: Quarto source for the paper.
