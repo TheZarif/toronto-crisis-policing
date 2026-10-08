@@ -117,6 +117,6 @@ Base spec: [Telling Stories with Data, Paper One](https://tellingstorieswithdata
 2. **Model:** `scripts/06-model_data.py` saves fitted models and tidy results to `models/` and `outputs/model/`; tests on model inputs.
 3. **References:** `paper/references.bib` with the literature, datasets, Python, packages, Quarto and the textbook.
 4. **Write `paper.qmd`:** figures with plotnine and tables with great_tables, generated in hidden code chunks from saved data.
-5. **Sketches:** hand-drawn dataset and graph sketches (Zarif) filed in `other/sketches/`.
+5. **Sketches:** skipped (decided 7 Oct 2026; forgoes the rubric's 2 sketch points).
 6. **Checks:** banned-words script, clean PDF render, cross-references, captions, typo pass.
 7. **Wrap up:** update README and STATUS, commit, push.

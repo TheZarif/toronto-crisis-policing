@@ -27,7 +27,7 @@ Never edit `data/01-raw_data/`; regenerate it via the download script.
 - `outputs/eda/<dataset>/` — one folder per dataset (`apprehensions` from `05a`, `arrests` from `05b`) holding figures, CSV tables and an `eda_<dataset>.md` write-up. Shared plot theme in `scripts/figure_style.py`.
 - `outputs/paper_draft.md` — project overview linking the per-dataset EDA write-ups.
 - `models/` (pickled statsmodels fits) and `outputs/model/` (tidy CSV results the paper reads), from `06-model_data.py`.
-- `paper/`, `other/` (sketches, datasheet, LLM usage log; `other/literature/` holds one literature review per dataset).
+- `paper/`, `other/` (LLM usage log; `other/literature/` holds one literature review per dataset).
 
 ## Status
 Progress, decisions and open issues live in `STATUS.md`; update it whenever a pipeline step or decision changes.
