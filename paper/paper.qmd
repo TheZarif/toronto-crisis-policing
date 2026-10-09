@@ -260,21 +260,19 @@ The results show where crisis policing concentrates and which reform measurably 
 
 ```{python}
 #| label: tbl-sources
-#| tbl-cap: "Four public datasets underpin the analysis. Records are those used after cleaning; the apprehension source holds the raw count shown in brackets, including years outside the study period. Sources: Open Data Toronto, Toronto Police Service and the Crisis Service evaluation report."
+#| tbl-cap: "Four public datasets underpin the analysis. Records are those used after cleaning; the raw apprehension file also includes years outside the study period. The pilot areas cover 9 of Toronto's 17 police divisions. Sources: Open Data Toronto, Toronto Police Service and the Crisis Service evaluation report (CAMH 2023)."
 #| output: asis
 sources = pd.DataFrame(
     [
-        ["Mental Health Act Apprehensions", "Toronto Police Service", "Apprehension", f"{first_year}–{last_year}",
-         f"{n_apprehensions} ({comma(n_raw)})", "RQ1, RQ2"],
-        ["Neighbourhood Profiles and boundaries", "City of Toronto", "Neighbourhood", "2021 Census", "158", "RQ1"],
-        ["Crisis Service pilot areas", "CAMH evaluation report", "Police division", "2022", "9 of 17 divisions", "RQ2"],
-        ["Race and Identity Based Data: Arrests and Strip Searches", "Toronto Police Service", "Person arrested",
-         "2020–2021", n_arrests, "RQ3"],
+        ["Mental Health Act apprehensions", "Toronto Police", "Apprehension", f"{first_year}–{last_year}", n_apprehensions, "RQ1, RQ2"],
+        ["Neighbourhood profiles, boundaries", "City of Toronto", "Neighbourhood", "2021", "158", "RQ1"],
+        ["Crisis Service pilot areas", "CAMH (2023)", "Police division", "2022", "17", "RQ2"],
+        ["Race-based arrests, strip searches", "Toronto Police", "Person arrested", "2020–2021", n_arrests, "RQ3"],
     ],
     columns=["dataset", "publisher", "unit", "period", "records", "used_for"],
 )
 latex_table(
-    GT(sources).cols_label(dataset="Dataset", publisher="Publisher", unit="Unit", period="Period", records="Records",
+    GT(sources).cols_label(dataset="Dataset", publisher="Publisher", unit="Unit", period="Years", records="Records",
                            used_for="Used for")
 )
 ```
